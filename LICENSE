@@ -1,4 +1,10 @@
-MIT License
+# Licencia dual
+
+Este repositorio utiliza una licencia dual según el tipo de contenido.
+
+## Código fuente — MIT License
+
+Aplica a todo el código Julia (archivos `.jl`).
 
 Copyright (c) 2026 Jonatán Perren
 
@@ -19,3 +25,21 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+## Contenido didáctico — Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+Aplica a los textos explicativos, enunciados, ejercicios y demás contenido educativo incluido en los cuadernos.
+
+Copyright (c) 2026 Jonatán Perren
+
+Eres libre de:
+- **Compartir** — copiar y redistribuir el material en cualquier medio o formato.
+- **Adaptar** — remezclar, transformar y construir a partir del material para cualquier propósito, incluso comercialmente.
+
+Bajo los siguientes términos:
+- **Atribución** — debes dar crédito apropiado, proporcionar un enlace a la licencia e indicar si se realizaron cambios.
+- **CompartirIgual** — si remezclas, transformas o construyes a partir del material, debes distribuir tu contribución bajo la misma licencia que el original.
+
+Texto legal completo: https://creativecommons.org/licenses/by-sa/4.0/legalcode

@@ -1,5 +1,7 @@
 # Cuadernos de Inferencia Estadística — FCE UNL
 
+> Código bajo [MIT License](LICENSE) · Contenido didáctico bajo [CC BY-SA 4.0](LICENSE)
+
 Repositorio de cuadernos [Pluto.jl](https://plutojl.org/) para la materia **Inferencia Estadística** de la Facultad de Ciencias Económicas de la Universidad Nacional del Litoral.
 
 ## Índice de archivos
