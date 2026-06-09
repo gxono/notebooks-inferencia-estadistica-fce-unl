@@ -6,6 +6,16 @@ Repositorio de cuadernos [Pluto.jl](https://plutojl.org/) para la materia **Infe
 
 ## Índice de archivos
 
+### Primeros pasos
+
+| Archivo | Descripción |
+|---------|-------------|
+| [00-julia-y-pluto.md](descargar-instalar-ejecutar/00-julia-y-pluto.md) | Qué son Julia y Pluto y por qué los usamos en este curso |
+| [01-descargar-e-instalar-julia.md](descargar-instalar-ejecutar/01-descargar-e-instalar-julia.md) | Cómo descargar e instalar Julia |
+| [02-descargar-e-instalar-pluto.md](descargar-instalar-ejecutar/02-descargar-e-instalar-pluto.md) | Cómo instalar el paquete Pluto desde Julia |
+| [03-ejecutar-julia-con-pluto.md](descargar-instalar-ejecutar/03-ejecutar-julia-con-pluto.md) | Cómo iniciar Pluto y abrir un cuaderno |
+| [04-preguntas-frecuentes.md](descargar-instalar-ejecutar/04-preguntas-frecuentes.md) | Problemas frecuentes y cómo resolverlos |
+
 ### Unidad temática 1
 
 | Archivo | Descripción |
