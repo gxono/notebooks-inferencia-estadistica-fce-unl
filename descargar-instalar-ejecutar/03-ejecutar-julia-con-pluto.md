@@ -40,6 +40,12 @@ Una vez ingresada la ruta o el enlace, hacé clic en **"Open"** y el cuaderno se
 
 > **Nota:** la primera vez que abrís un cuaderno, Pluto necesita descargar y compilar todos los paquetes que usa. Esto puede llevar varios minutos. Las celdas mostrarán un símbolo de carga — es normal, no se rompió nada. Las veces siguientes el proceso es mucho más rápido.
 
-## 4. Cerrar Pluto
+## 4. Verificar que todo funciona
+
+Para confirmar que la instalación está completa y en orden, abrí el cuaderno de prueba de este repositorio. Está disponible en la carpeta `descargar-instalar-ejecutar/` con el nombre `cuaderno-de-prueba.jl`. Podés abrirlo pegando su ruta en el campo **"Open a notebook"** de Pluto, o usando el enlace directo desde GitHub siguiendo los pasos del archivo [04-descargar-cuadernos-desde-github.md](04-descargar-cuadernos-desde-github.md).
+
+Si el cuaderno carga y se ve correctamente, la instalación está lista.
+
+## 5. Cerrar Pluto
 
 Volvé a la terminal y presioná `Ctrl+C`, o simplemente cerrá la ventana de la terminal.

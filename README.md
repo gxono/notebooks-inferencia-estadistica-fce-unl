@@ -4,6 +4,16 @@
 
 Repositorio de cuadernos [Pluto.jl](https://plutojl.org/) para la materia **Inferencia Estadística** de la Facultad de Ciencias Económicas de la Universidad Nacional del Litoral.
 
+## Inicio rápido
+
+Si ya tenés Julia y Pluto instalados y querés abrir un cuaderno:
+
+1. Abrí una terminal y ejecutá `julia`
+2. Cuando aparezca el texto `julia>`, escribí `import Pluto; Pluto.run()` y presioná Enter
+3. En la pantalla de Pluto, pegá el enlace del cuaderno que querés abrir y hacé clic en **Open**
+
+Si es la primera vez, seguí los pasos de la sección **Primeros pasos** más abajo.
+
 ## Índice de archivos
 
 ### Primeros pasos
@@ -16,6 +26,7 @@ Repositorio de cuadernos [Pluto.jl](https://plutojl.org/) para la materia **Infe
 | [03-ejecutar-julia-con-pluto.md](descargar-instalar-ejecutar/03-ejecutar-julia-con-pluto.md) | Cómo iniciar Pluto y abrir un cuaderno |
 | [04-descargar-cuadernos-desde-github.md](descargar-instalar-ejecutar/04-descargar-cuadernos-desde-github.md) | Cómo descargar o abrir los cuadernos desde GitHub |
 | [99-preguntas-frecuentes.md](descargar-instalar-ejecutar/99-preguntas-frecuentes.md) | Problemas frecuentes y cómo resolverlos |
+| [cuaderno-de-prueba.jl](descargar-instalar-ejecutar/cuaderno-de-prueba.jl) | Cuaderno de prueba para verificar que la instalación funciona correctamente |
 
 ### Unidad temática 1
 
