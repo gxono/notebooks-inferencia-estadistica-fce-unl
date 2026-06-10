@@ -1,6 +1,6 @@
 # Ejecutar un cuaderno con Pluto
 
-## 1. Abrir el REPL de Julia
+## 1. Abrir la consola de Julia
 
 Abrí una terminal y ejecutá:
 ```
@@ -9,7 +9,7 @@ julia
 
 ## 2. Iniciar Pluto
 
-En el prompt `julia>` ejecutá:
+Cuando veas el texto `julia>`, escribí lo siguiente y presioná Enter:
 ```julia
 import Pluto; Pluto.run()
 ```
@@ -42,4 +42,4 @@ Una vez ingresada la ruta o el enlace, hacé clic en **"Open"** y el cuaderno se
 
 ## 4. Cerrar Pluto
 
-Para detener el servidor de Pluto volvé a la terminal y presioná `Ctrl+C`, o simplemente cerrá la ventana de la terminal.
+Volvé a la terminal y presioná `Ctrl+C`, o simplemente cerrá la ventana de la terminal.
