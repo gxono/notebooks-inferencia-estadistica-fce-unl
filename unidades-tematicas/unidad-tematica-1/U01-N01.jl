@@ -160,6 +160,9 @@ legajos = [Legajo(i, riesgo)
 @info dibujar_muestra.(legajos; escala = 1.5)
 end
 
+# ╔═╡ 8a9c8fc4-1e4a-4fc9-aa4d-61fabd9a5c09
+md"### Espacio muestral"
+
 # ╔═╡ 5fac0cef-500c-4304-9aab-5978d996129e
 md"""
 El *espacio muestral* que se genera al tomar una muestra al azar de tamaño 2 y observar los valores de ``X`` e ``Y`` puede verse a continuación"""
@@ -178,14 +181,6 @@ md"""
 
 ``Y`` = Cantidad de expedientes calificados como *Riesgo Alto*    
 """
-
-# ╔═╡ 8a9c8fc4-1e4a-4fc9-aa4d-61fabd9a5c09
-md"### Espacio muestral"
-
-# ╔═╡ 0b40a194-5556-4daa-89e5-43c78e5cad8e
-begin
-@info "Espacio muestral:" unique(observacion_xy.(espacio_muestral))
-end
 
 # ╔═╡ 1bd1b2ed-a40d-4677-982d-cc11295da856
 begin
@@ -2112,13 +2107,12 @@ version = "4.1.0+0"
 # ╟─e644c2fa-8e7b-417f-b539-c9928c4ad5ca
 # ╟─9b5a4813-53cf-433f-95b6-124b921798b6
 # ╟─a177bdd2-7a84-49de-b299-ee19402f59ee
+# ╟─8a9c8fc4-1e4a-4fc9-aa4d-61fabd9a5c09
 # ╟─5fac0cef-500c-4304-9aab-5978d996129e
 # ╟─993fc6c4-3c72-46b8-af81-db287e35b4ae
 # ╟─8c5a59a8-6433-4c6f-a66b-6d68c67b30c4
-# ╟─8a9c8fc4-1e4a-4fc9-aa4d-61fabd9a5c09
-# ╟─0b40a194-5556-4daa-89e5-43c78e5cad8e
 # ╟─1bd1b2ed-a40d-4677-982d-cc11295da856
-# ╠═a55084f2-bc32-4426-8e13-4cc921dbe3a1
+# ╟─a55084f2-bc32-4426-8e13-4cc921dbe3a1
 # ╟─172348ff-d7ff-47e1-a459-71069f5d6252
 # ╟─9692cc0a-a5c8-4aab-9981-bdd158bf259c
 # ╟─0be96aa0-61ff-4d9a-861a-b9be4a5a1bd9
@@ -2132,6 +2126,6 @@ version = "4.1.0+0"
 # ╟─eacca293-e591-4817-8789-2b834d3e7e0a
 # ╟─a9b1c2d3-e4f5-4321-a9b1-c2d3e4f5a6b7
 # ╟─f4de1238-05c8-41fa-8cc6-ad6fea95e963
-# ╠═cf7433f0-5ee5-4aa9-b35a-d04d8a9c4aeb
+# ╟─cf7433f0-5ee5-4aa9-b35a-d04d8a9c4aeb
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
