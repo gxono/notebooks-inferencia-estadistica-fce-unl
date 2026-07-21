@@ -16,420 +16,299 @@ macro bind(def, element)
     #! format: on
 end
 
-# ╔═╡ cf7433f0-5ee5-4aa9-b35a-d04d8a9c4aeb
+# ╔═╡ 8b1065d0-8533-11f1-b6d2-8d30213e0a80
 begin
-using StatsBase
-using Combinatorics
-using CairoMakie
-using PlutoTeachingTools
-using PlutoUI
-import PlutoUI: Slider
-	
 md"""
-# Dependencias del proyecto
+# Dependencias necesarias
 """
+
+	using PlutoUI
+	using Statistics
+	using StatsBase
+	using Distributions
+	using CairoMakie
+	using LaTeXStrings
 end
 
-# ╔═╡ 2896d00e-fa9a-4a0d-b7bf-a629a81f49d6
-begin
-struct Legajo
-	id::Int
-	tipo::Symbol
-end
-	
-colores_legajo = (bajo = :green, medio = :orange, alto = :red)
-	
-opciones_poly = (
-	strokecolor = :black, 
-	strokewidth = 4)
-
-opciones_text = (
-	align = (:center, :center), 
-	color = :white, 
-	font = :bold)
-
-function dibujar_legajos!(ax, legajos; escala = 1)
-    for (i, legajo) in enumerate(legajos)
-        poly!(ax, Rect2f(i-1, 0, 1, 1); 
-			  color = colores_legajo[legajo.tipo], 
-			  opciones_poly...)
-        text!(ax, i-0.5, 0.5; 
-			  text = string(legajo.id), 
-			  fontsize = 12 * escala, 
-			  opciones_text...)
-    end
-end
-
-#Dibuja una muestra de legajos (contenida en una tupla, ojo!)
-# Esto es asi porque decidi que las 2-muestra esten guardadas ahi.
-function dibujar_muestra(legajos; escala = 1)
-    n = length(legajos)
-    fig = Figure(size = (20n * escala, 20 * escala), figure_padding = 2)
-    ax = Axis(fig[1,1], aspect = DataAspect(),
-              limits = (0, n, 0, 1), backgroundcolor = :transparent)
-    hidedecorations!(ax)
-    hidespines!(ax)
-    dibujar_legajos!(ax, legajos; escala = escala)
-    fig
-end
-
-#y un Method para dibujar un solo legajo fuera de un Vector (por pereza)
-dibujar_muestra(legajo::Legajo; escala = 1) = dibujar_muestra([legajo]; escala = escala)
-
-
-
-#recibe una muestra de 2, una cantidad de moderado, una cantidad de alto y testea
-function es_muestra_xy(legajos, x, y)
-	n_medio = 0
-	n_alto = 0
-	
-	for legajo in legajos
-		legajo.tipo == :medio ? n_medio += 1 :
-		legajo.tipo == :alto ? n_alto += 1 : nothing
-	end
-
-	return (x == n_medio) && (y == n_alto)
-end
-
-
-function observacion_xy(repeticion)
-	(
-		x = (repeticion[1].tipo == :medio) + (repeticion[2].tipo == :medio),
-		y = (repeticion[1].tipo == :alto) + (repeticion[2].tipo == :alto)
-	)
-end
-
-	
-# Cuenta en el vector de repeticiones las apariciones que satisfacen x e y
-#x: cantidad moderada
-#y: cantidad alta
-function crxy(repeticiones, x, y)
-	sum(es_muestra_xy.(repeticiones, x, y))
-end
-
-function es_no_critica(muestra)
-	count(l -> l.tipo == :medio || l.tipo == :alto, muestra) < 2
-end
-
-end;
-
-# ╔═╡ 2ce6b9dc-429d-40f0-a030-8de4f5e23823
-md"*Una versión mucho menos detallada (pero sin restricciones para experimentar, ligera y eficiente) es la del fichero* `legajos-bancarios-code.jl`"
-
-# ╔═╡ 24276ebf-5d60-4342-8091-f13b02c549f2
+# ╔═╡ cd31f0b7-a386-46e5-9cfa-c145fa0260a6
 md"""🔄 *Reiniciar cuaderno* $(@bind reset_nb CounterButton("Reiniciar"))"""
 
-# ╔═╡ 2953ee77-5d8f-4e4d-b2fa-689ab51dd045
+# ╔═╡ bf9277a1-6dcb-4200-8243-7b38d300460e
+TableOfContents(title = "📖 Tabla de contenidos")
+
+# ╔═╡ 3f9eaa91-1440-43a3-938b-98e8df9daf57
 md"""
-# U01-N01:DL01
+# Situación 1
 
-## Situación 1: Legajos bancarios
+En 2019, el gobierno de una provincia habilitó una zona franca industrial, con el objetivo declarado de aumentar las exportaciones de las empresas radicadas en esa área. Para evaluar su impacto, un equipo de economistas relevó el valor promedio exportado anual (en miles de USD) de una muestra de empresas manufactureras de la zona franca y de otra muestra de empresas similares ubicadas fuera de ella, todas con perfil exportador previo comparable. La variabilidad en poblacional en ambos casos se supone que es de 10 miles de dólares.
 
-Una entidad bancaria está revisando una muestra aleatoria de 2 legajos de préstamos otorgados durante el último mes para una auditoría de calidad. En el lote a auditar hay 12 expedientes con las siguientes calificaciones de riesgo (basadas en la capacidad de pago):
-5 de “Riesgo bajo"
-4 de "Riesgo Moderado"
-3 de "Riesgo Alto”
-Si la muestra contiene a lo sumo un expediente de Riesgo Moderado o Alto, se considera “no crítica”. Determinar la probabilidad de que la muestra sea calificada de esa forma.
+Los datos relevados correspondientes al año 2023 fueron
+
+|             Grupo             |  ``n`` | Media (miles de USD) |
+|:-----------------------------:|:------:|:--------------------:|
+|    Empresas en zona franca    |   38   |         1245        |
+| Empresas fuera de zona franca |   41   |         1087        |
+
+## Variables
+ - X: Valor promedio exportado anual (en miles de USD) de empresas manufactureras de la zona franca.
+ - Y: Valor promedio exportado anual (en miles de USD) de empresas manufactureras, con similares características a las radicadas en la zona franca pero que no se encuentran en dicha zona.
+
+## Conclusión
+Dado que
+
+```math
+\bar{x} - \bar{y} = 158
+```
+
+en promedio, las empresas manufactureras radicadas en la zona franca exportaron USD 158000 anuales más que empresas manufactureras comparables ubicadas fuera de ella, durante el año 2023.
+
+Una consultora privada realizó el relevamiento de igual forma pero dice que llegó a otra conclusión, ¿es esto posible?
 """
 
-# ╔═╡ e644c2fa-8e7b-417f-b539-c9928c4ad5ca
-TableOfContents()
-
-# ╔═╡ 9b5a4813-53cf-433f-95b6-124b921798b6
-md"### Los expedientes"
-
-# ╔═╡ a177bdd2-7a84-49de-b299-ee19402f59ee
-begin
-constructor = (bajo = 5, medio = 4, alto = 3)
-
-
-# "un Legajo de cada riesgo, repetido cantidad veces"
-legajos = [Legajo(i, riesgo)
-			for (riesgo, cantidad) in pairs(constructor)
-			for i in 1:cantidad]
-
-@info dibujar_muestra.(legajos; escala = 1.5)
-end
-
-# ╔═╡ 8a9c8fc4-1e4a-4fc9-aa4d-61fabd9a5c09
-md"### Espacio muestral"
-
-# ╔═╡ 5fac0cef-500c-4304-9aab-5978d996129e
-md"""
-El *espacio muestral* que se genera al tomar una muestra al azar de tamaño 2 y observar los valores de ``X`` e ``Y`` puede verse a continuación"""
-
-# ╔═╡ 993fc6c4-3c72-46b8-af81-db287e35b4ae
-begin
-	espacio_muestral = combinations(legajos, 2) |> collect
-	@info "Espacio muestral:" dibujar_muestra.(espacio_muestral; escala = 1.5)
-end
-
-# ╔═╡ 8c5a59a8-6433-4c6f-a66b-6d68c67b30c4
-md"""
-### Definición de las variables aleatorias
-
-``X`` = Cantidad de expedientes calificados como *Riesgo Moderado*
-
-``Y`` = Cantidad de expedientes calificados como *Riesgo Alto*    
-"""
-
-# ╔═╡ 1bd1b2ed-a40d-4677-982d-cc11295da856
+# ╔═╡ 8f0ee3f7-9836-45c6-b389-77d9d6308f36
 begin
 reset_nb
 	
-md"""*Distribución de frecuencias* al tomar $(@bind repeticion_n_aux NumberField(default=10)) muestras aleatorias."""
-end
-
-# ╔═╡ a55084f2-bc32-4426-8e13-4cc921dbe3a1
-begin
-repeticion_n = isnan(repeticion_n_aux) ? 1 : Int(repeticion_n_aux);
-#Esta es la muestra
-repeticiones = sample(espacio_muestral, repeticion_n; replace = true)
-
-#La tabla de frecuencias, para ya tenerla. (esta es la de cada obs. del espacio)
-repeticiones_freq = let r = countmap(repeticiones)
-	[e => get(r, e, 0) for e in espacio_muestral if haskey(r, e)]
-end
-
-#La matrix de frecuencias segun X e Y
-freqxy = Matrix{Int64}(undef, 3, 3)
-for x in 1:3, y in 1:3
-	freqxy[x, y] = crxy(repeticiones, x-1, y-1)
-end
-end;
-
-# ╔═╡ 172348ff-d7ff-47e1-a459-71069f5d6252
-begin
-reset_nb
-md"👀 Mostrar tabla de frecuencias graficas $(@bind mostrar_tablafrecuencias_em Switch())"
-end
-
-# ╔═╡ 9692cc0a-a5c8-4aab-9981-bdd158bf259c
-begin
-reset_nb
-if mostrar_tablafrecuencias_em
-	md"Moderados: $(@bind filtro_moderado Select([\"Cualq.\", \"0\", \"1\", \"2\"])) Altos: $(@bind filtro_alto Select([\"Cualq.\", \"0\", \"1\", \"2\"]))"
-end
-end
-
-# ╔═╡ 0be96aa0-61ff-4d9a-861a-b9be4a5a1bd9
-if mostrar_tablafrecuencias_em
-let
-    indices_filtrados = findall(repeticiones_freq) do par
-        x_ok = filtro_moderado == "Cualq." || count(l -> l.tipo == :medio, par.first) == parse(Int, filtro_moderado)
-        y_ok = filtro_alto     == "Cualq." || count(l -> l.tipo == :alto,  par.first) == parse(Int, filtro_alto)
-        x_ok && y_ok
-    end
-
-    if isempty(indices_filtrados)
-        md"*No hay muestras con esos valores.*"
-    else
-        n_cols = 4
-        n = length(indices_filtrados)
-        n_filas = ceil(Int, n / n_cols)
-
-        header    = "| " * join(repeat(["Muestra | Frecuencia"], n_cols), " | ") * " |"
-        separator = "|" * repeat(":---:|:---:|", n_cols)
-
-        filas = join([
-            let indices = [r + c*n_filas for c in 0:n_cols-1 if r + c*n_filas <= n]
-                celdas = ["\$(dibujar_muestra(repeticiones_freq[$(indices_filtrados[i])].first)) | \$(repeticiones_freq[$(indices_filtrados[i])].second)"
-                          for i in indices]
-                celdas = vcat(celdas, repeat([" | "], n_cols - length(indices)))
-                "| " * join(celdas, " | ") * " |"
-            end
-            for r in 1:n_filas
-        ], "\n")
-
-        eval(Meta.parse("""
-        md\"\"\"
-        $header
-        $separator
-        $filas
-        \"\"\""""))
-    end
-end
-end
-
-
-# ╔═╡ f5c05476-1f60-43d8-974b-036ca98a0bfe
-let
-	# 1. Definición de la función de formato
-	fmt(r) = r == 0 ? "0" : "$(r)"
-
-	# 3. Estructura de la tabla
-	header = "| ``n_{(X,Y)}`` | ``Y = 0`` | ``Y = 1`` | ``Y = 2`` | ``n_{(X = x)}`` |"
-	sep    = "|:---:|:---:|:---:|:---:|:---:|"
-	filas  = [
-		"| ``X = $(x-1)`` | $(fmt(freqxy[x, 1])) | $(fmt(freqxy[x, 2])) | $(fmt(freqxy[x, 3])) | $(fmt(sum(freqxy[x, :]))) |"
-		for x in 1:3
-	]
-	pie    = "| ``n_{(Y = y)}`` | $(fmt(sum(freqxy[:, 1]))) | $(fmt(sum(freqxy[:, 2]))) | $(fmt(sum(freqxy[:, 3]))) | ``1`` |"
-
-	# 4. Renderizado final con Markdown
-	Markdown.parse("""
-	### Número de observaciones para cada valor de ``(X,Y)``
-
-	$(join([header, sep, filas..., pie], "\n"))
-	""")
-end
-
-# ╔═╡ 21cedb47-c1e5-41c2-9729-587a55a98c0e
-begin 
-	# 1. Definición de la función de formato
-	fmt(r) = r == 0 ? "0" : "$(r)/$(repeticion_n)"
-	
-	# 2. Cálculo de la suma solicitada y comparación
-	# (0,0) -> [1,1], (0,1) -> [1,2], (1,0) -> [2,1]
-	suma_absoluta = freqxy[1,1] + freqxy[1,2] + freqxy[2,1]
-	valor_suma = suma_absoluta / repeticion_n
-	referencia = 45 / 66
-	
-	# Determinamos el símbolo de comparación
-	simbolo = if valor_suma > referencia
-		">"
-	elseif valor_suma < referencia
-		"<"
-	else
-		"="
-	end
-
-	# 3. Estructura de la tabla
-	header = "| ``f(X,Y)`` | ``Y = 0`` | ``Y = 1`` | ``Y = 2`` | ``P(X = x)`` |"
-	sep    = "|:---:|:---:|:---:|:---:|:---:|"
-	filas  = [
-		"| ``X = $(x-1)`` | $(fmt(freqxy[x, 1])) | $(fmt(freqxy[x, 2])) | $(fmt(freqxy[x, 3])) | $(fmt(sum(freqxy[x, :]))) |"
-		for x in 1:3
-	]
-	pie    = "| ``P(Y = y)`` | $(fmt(sum(freqxy[:, 1]))) | $(fmt(sum(freqxy[:, 2]))) | $(fmt(sum(freqxy[:, 3]))) | ``1`` |"
-
-	# 4. Renderizado final con Markdown
-	Markdown.parse("""
-	### Tabla de distribución de frecuencias conjunta ``P(X = x, Y = y)``
-
-	$(join([header, sep, filas..., pie], "\n"))
-
-	---
-	- Resultado del cálculo de probabilidad empírica: La suma ``f(0,0) + f(0,1) + f(1,0)`` es ``$(fmt(suma_absoluta)) \\approx $(round(valor_suma, digits=4))``.
-	
-	- Valor de probabilidad teórica ``≈ 0.6818``
-	""")
-end
-
-# ╔═╡ d55da34e-c1f6-4f5b-b894-1ca7ca3eff80
 md"""
-### Tabla de distribución conjunta de probabilidad
+# U03-N01:DL01
 
-| ``f(X,Y)`` | ``Y=0`` | ``Y=1`` | ``Y=2`` | ``P(X = x)`` |
-| :--- | :---: | :---: | :---: | :---: |
-| ``X=0`` | $10/66$ | $15/66$ | $3/66$ | **$28/66$** |
-| ``X=1`` | $20/66$ | $12/66$ | $0$ | **$32/66$** |
-| ``X=2`` | $6/66$ | $0$ | $0$ | **$6/66$** |
-| ``P(Y = y)`` | $36/66$ | $27/66$ | $3/66$ | $66/66$ |
+Para responder esta pregunta, simulemos qué pasaría si se repitiera el relevamiento con nuevas muestras aleatorias de las mismas poblaciones. Tomemos $(@bind n_muestras Scrubbable(1:500, default = 20)) muestras distintas de 38 y 41 elementos para las empresas en zona franca y las empresas fuera de la zona franca respectivamente, asumiendo que las medias poblacionales son efectivamente 1245 y 1087 (los valores relevados) y que el desvío poblacional en ambos casos es de 10, tal como se supuso en el enunciado.
+
+Los resultados se pueden ver en la siguiente lista, en donde el primer elemento del par ordenado es la media para las empresas en zona franca (``\bar{x}``) y el segundo elemento es la media para las empresas fuera de zona franca (``\bar{y}``).
 """
 
-# ╔═╡ fc162686-5859-4af9-97bc-f7e75ea74fb3
-md"### Tendencia de la frecuencia relativa por número de muestra"
+end
 
-# ╔═╡ ba812b29-e0b4-40d6-be41-9e71fed7c434
+# ╔═╡ 9c89bb71-ade4-4114-9cbb-34d3f6b12395
+begin
+x̄, ȳ, σ = 1245, 1087, 10
+medias = Vector{Tuple{Float64, Float64}}(undef, n_muestras)
+
+for i in 1:n_muestras
+	m₁ = rand(Normal(x̄, σ), 38)
+	m₂ = rand(Normal(ȳ, σ), 41)
+
+	medias[i] = (mean(m₁), mean(m₂))
+end
+
+@info "Muestra de medias distintas" medias
+	
+end
+
+# ╔═╡ 4ed9c622-5b22-4863-8b45-ea140cda31bc
+md"""
+Calculamos ahora las diferencias para estas medias, y obtenemos la siguiente lista.
+"""
+
+# ╔═╡ f07ba571-0781-4a24-aa72-f0f7697d2b79
+begin
+
+diferencia_medias = [m₁ - m₂ for (m₁, m₂) in medias]
+
+@info "Diferencia de medias de la lista anterior" diferencia_medias
+end
+
+# ╔═╡ 4977bef3-fdf8-4112-a793-cfe51f8c7c5d
+md"""
+Veamos un gráfico para representar los valores de las medias de cada muestra.
+"""
+
+# ╔═╡ 6778dc16-9bd7-4db7-96fe-58cb55a74d5a
 let
-	cum_freq = Vector{Float64}(undef, repeticion_n)
-	cum_freq[1] = es_no_critica(repeticiones[1])
-
-	curr_qty::Float64 = cum_freq[1]
-	for i in 2:length(repeticiones) #mas eficiente que calcular para cada muestra
-		curr_qty = curr_qty + es_no_critica(repeticiones[i])
-		cum_freq[i] = curr_qty / i
-	end
-
-	frecuencia_verdadera = 45//66
-
-	num::Int64    = numerator(frecuencia_verdadera)
-	den::Int64    = denominator(frecuencia_verdadera)
-	
-	
 	fig = Figure(size = (700, 400))
+
 	ax = Axis(fig[1,1],
-			xlabel = "Número de muestra tomada",
-			ylabel = "Frecuencia relativa",
-			title = "Frecuencia relativa de legajos \"no críticos\" por número de muestra")
+		xlabel = "Número de muestra",
+		ylabel = "Media muestral")
 
-	hlines!(ax, frecuencia_verdadera, color = :red, label = "Frecuencia verdadera (≈ 0.6818)")
-	lines!(ax, eachindex(repeticiones), cum_freq, label = "Frecuencia experimental")
+	puntos_media_m1 = [Point2d([i, m]) for (i, m) in enumerate(first.(medias))]
+	puntos_media_m2 = [Point2d([i, m]) for (i, m) in enumerate(last.(medias))]
 
-	axislegend(ax, position=:rb)
+	hlines!(ax, 1245, color = :blue, linestyle = :dash)
+	hlines!(ax, 1087, color = :red, linestyle = :dash)
+	
+	linesegments!(ax, collect(zip(puntos_media_m1, puntos_media_m2)))
+	scatter!(ax, puntos_media_m1, color = :blue)
+	scatter!(ax, puntos_media_m2, color = :red)
 
+	ax2 = Axis(fig[1,2])
+	linkyaxes!(ax, ax2)
+	xlims!(ax2, 0, nothing)
+	hidedecorations!(ax2)
+	hidespines!(ax2)
+	colgap!(fig.layout, 1, Fixed(5))
+	colsize!(fig.layout, 2, Fixed(75))
+
+	etiqueta(n, idx, c) = text!(ax2, 0, n, 
+	   text = L"\bar{%$idx} = %$n", 
+	   align = (:left, :baseline), 
+	   font = :bold, 
+	   color = c)
+	
+	etiqueta(1245, "x", :blue)
+	etiqueta(1087, "y", :red)
+
+	
 	fig
 end
 
-# ╔═╡ e232af1b-321a-47c9-88ae-207323c897f4
-md"# U01-N01: DL02"
+# ╔═╡ 51cd2db3-45bb-446f-ba22-3b936425d243
+md"""
+Si graficamos estas diferencias por separado, para notar mejor sus amplitudes, tenemos la siguiente imagen, en donde ``d`` es la diferencia de medias que obtuvo el gobierno de la provincia.
+"""
 
-# ╔═╡ 25be106d-d1ea-4ab5-9ac0-aaa7bd0d1489
-md"## Situacion 1"
-
-# ╔═╡ eacca293-e591-4817-8789-2b834d3e7e0a
-md"### Teorica"
-
-# ╔═╡ a9b1c2d3-e4f5-4321-a9b1-c2d3e4f5a6b7
+# ╔═╡ acf731af-3eef-4b4c-a7c4-0775d2a0bd7a
 let
-	N   = sum(values(constructor))
-	K_X = constructor.medio
-	K_Y = constructor.alto
-	n   = 2
+	fig = Figure(size = (700, 400))
 
-	μ_X  = n * K_X // N
-	μ_Y  = n * K_Y // N
-	σ²_X = n * K_X * (N - K_X) * (N - n) // (N^2 * (N - 1))
-	σ²_Y = n * K_Y * (N - K_Y) * (N - n) // (N^2 * (N - 1))
-	σ_XY = -n * K_X * K_Y * (N - n) // (N^2 * (N - 1))
+	ax = Axis(fig[1,1],
+		xlabel = "Número de muestra",
+		ylabel = "Diferencia de medias")
 
-	frac(r) = "$(numerator(r))/$(denominator(r))"
-	apr(r)  = round(Float64(r), digits=4)
 
-	Markdown.parse("""
-	A partir de los parámetros de la población, se tiene
+	puntos_base = [Point2d([i, 0]) for i in eachindex(medias)]
+	puntos_diferencia = [Point2d([i, d]) for (i, d) in enumerate(diferencia_medias)]
 
-	- ``\\mu_X = E(X) = $(frac(μ_X)) \\approx $(apr(μ_X))``
-	- ``\\mu_Y = E(Y) = $(frac(μ_Y)) \\approx $(apr(μ_Y))``
-	- ``\\sigma^2_X = \\mathrm{Var}(X) = $(frac(σ²_X)) \\approx $(apr(σ²_X))``
-	- ``\\sigma^2_Y = \\mathrm{Var}(Y) = $(frac(σ²_Y)) \\approx $(apr(σ²_Y))``
-	- ``\\sigma_{XY} = \\mathrm{Cov}(X,Y) = $(frac(σ_XY)) \\approx $(apr(σ_XY))``
-	""")
+	hlines!(ax, 158, color = :green)
+	
+	linesegments!(ax, collect(zip(puntos_base, puntos_diferencia)))
+	scatter!(ax, vcat(puntos_base, puntos_diferencia), marker = :hline)
+
+	ax2 = Axis(fig[1,2])
+	linkyaxes!(ax, ax2)
+	xlims!(ax2, 0, nothing)
+	hidedecorations!(ax2)
+	hidespines!(ax2)
+	colgap!(fig.layout, 1, Fixed(5))
+	colsize!(fig.layout, 2, Fixed(75))
+
+	text!(ax2, 0, 158, 
+	   text = L"d = 158", 
+	   align = (:left, :baseline), 
+	   font = :bold, 
+	   color = :green)
+	
+	fig
 end
 
-# ╔═╡ f4de1238-05c8-41fa-8cc6-ad6fea95e963
-let
-x_obs = [i.x for i in observacion_xy.(repeticiones)]
-y_obs = [i.y for i in observacion_xy.(repeticiones)]
-
-eval(Markdown.parse(
+# ╔═╡ dc520bc0-ad20-474b-9d49-c41d974162a2
+md"""
+Como podemos ver, hay variabilidad en las posibles diferencias de medias, aunque acotada: en todas las muestras simuladas la diferencia sigue siendo positiva y de una magnitud similar. Esto sugiere que, si los supuestos del enunciado son correctos, es poco probable que la sola variabilidad muestral explique una conclusión opuesta por parte de la consultora privada, más bien habría que pensar en otras causas, como diferencias en la metodología del relevamiento, el período considerado, o el hecho de que esto es un estudio observacional (las empresas no fueron asignadas al azar a la zona franca) y no un experimento controlado.
 """
-### Experimental
 
-A partir de los datos de la muestra, se tiene
+# ╔═╡ 0edecc4e-910c-4399-affd-ec192161a492
+begin
+reset_nb
 	
-- ``\\bar{X} = $(mean(x_obs))``
-- ``\\bar{Y} = $(mean(y_obs))``
-- ``S^2_X = $(var(x_obs))``
-- ``S^2_Y = $(var(y_obs))``
-- ``S_{XY} = $(cov(x_obs, y_obs))``
-"""))
+md"""
+# U03-N01:DL02
+
+Para ver que no es necesario que las distribuciones sean normales, supongamos que el valor exportado sigue una distribución uniforme con medias de 1245 (zona franca) y 1087 (fuera de zona franca) y con una desviación estándar de 10 en ambos casos. Tomemos $(@bind n_muestrasu NumberField(1:1000000, default=500)) muestras distintas de 38 y 41 elementos para las empresas en zona franca y las empresas fuera de la zona franca respectivamente.
+"""
+end
+
+# ╔═╡ 0c3c2aeb-cc6e-4efc-a95a-dc28b72f6e47
+begin
+uniforme_con(μ, σ) = Uniform(μ - σ*sqrt(3), μ + σ*sqrt(3))
+	
+mediasu = Vector{Tuple{Float64, Float64}}(undef, n_muestrasu)
+
+for i in 1:n_muestrasu
+	m₁ = rand(uniforme_con(x̄, σ), 38)
+	m₂ = rand(uniforme_con(ȳ, σ), 41)
+
+	mediasu[i] = (mean(m₁), mean(m₂))
+end
+
+@info "Muestra de medias distintas" mediasu
+end
+
+# ╔═╡ 1517c365-6e5e-4c95-9645-d1736517d871
+let
+	fig = Figure(size = (700, 200))
+
+	ax1 = Axis(fig[1,1], title = "Una muestra para zona franca (n = 38)")
+	hist!(ax1, rand(uniforme_con(x̄, σ), 38))
+
+	ax2 = Axis(fig[1,2], title = "Una muestra para zona no franca (n = 41)")
+	hist!(ax2, rand(uniforme_con(ȳ, σ), 41))
+	
+	fig
+end
+
+# ╔═╡ 2dbe06ef-3a45-46fd-be7a-b3e81523cd0e
+md"""
+A continuación, veamos la distribución de medias de estas muestras provenientes de distribuciones uniformes.
+"""
+
+# ╔═╡ 3a57df9b-815f-4cd7-92b0-8d0f30ef725b
+let
+	fig = Figure(size = (700, 200))
+
+	ax1 = Axis(fig[1,1], title = "Dist. de medias para zona franca")
+	hist!(ax1, first.(mediasu))
+	vlines!(ax1, 1245, color = :green, label = L"\bar{x} = 1245")
+	axislegend()
+	
+	
+	ax2 = Axis(fig[1,2], title = "Dist. de medias para zona no franca")
+	hist!(ax2, last.(mediasu))
+	vlines!(ax2, 1087, color = :green, label = L"\bar{y} = 1087")
+	
+	axislegend()
+	fig
+end
+
+# ╔═╡ 3ac03e3e-714d-42b5-8c3b-52c882a66d12
+md"""
+Podemos ver que si el tamaño de cada muestra (38 y 41, no la cantidad de muestras simuladas) es lo suficientemente grande, las distribuciones de medias tienden a una distribución acampanada esto es el Teorema Central del Límite en acción.
+"""
+
+# ╔═╡ d6de81af-6568-4e00-8eda-cbb2cf6ad38c
+md"""
+Nuevamente, calculemos la diferencia de medias.
+"""
+
+# ╔═╡ 35368b05-37e0-43c0-93c2-d96b2a42a150
+begin
+
+diferencia_mediasu = [m₁ - m₂ for (m₁, m₂) in mediasu]
+
+@info "Diferencia de medias de la lista anterior" diferencia_mediasu
+end
+
+# ╔═╡ 41e11f77-baf4-4d05-ac56-617ddf891062
+md"""
+Dado que la diferencia de medias es una combinación lineal de las medias, es de esperar que su distribución también sea acampanada.
+"""
+
+# ╔═╡ 3d2205e0-1fe8-463c-95b7-643cf07b8aaf
+let
+	fig = Figure(size = (700, 400))
+	ax = Axis(fig[1,1])
+
+	hist!(ax, diferencia_mediasu, bins =  1 + Int64(floor(log2(n_muestrasu))))
+	vlines!(ax, 158, color = :green, label = L"\bar{d} = 158")
+
+	axislegend()
+	
+	fig
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
-PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 CairoMakie = "~0.15.13"
-Combinatorics = "~1.1.0"
-PlutoTeachingTools = "~0.4.7"
+Distributions = "~0.25.129"
+LaTeXStrings = "~1.4.0"
 PlutoUI = "~0.7.83"
 StatsBase = "~0.34.12"
 """
@@ -440,7 +319,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "9e795bbad1bd2dd05152689bb5771abeda92315c"
+project_hash = "044d0ebf79430d15358baf94ec9ea4286b3f1359"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -648,11 +527,6 @@ deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
 git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.1"
-
-[[deps.Combinatorics]]
-git-tree-sha1 = "c761b00e7755700f9cdf5b02039939d1359330e1"
-uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
-version = "1.1.0"
 
 [[deps.CommonSolve]]
 git-tree-sha1 = "eeaad7cef88554c2fa56b5a3f71cfd5cb708c662"
@@ -936,12 +810,6 @@ git-tree-sha1 = "45288942190db7c5f760f59c04495064eedf9340"
 uuid = "b0724c58-0f36-5564-988d-3bb0596ebc4a"
 version = "0.22.4+0"
 
-[[deps.Ghostscript_jll]]
-deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "38044a04637976140074d0b0621c1edf0eb531fd"
-uuid = "61579ee1-b43e-5ca0-a5da-69d92c66a64b"
-version = "9.55.1+0"
-
 [[deps.Giflib_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "6570366d757b50fabae9f4315ad74d2e40c0560a"
@@ -1207,24 +1075,6 @@ version = "22.1.7+0"
 git-tree-sha1 = "dda21b8cbd6a6c40d9d02a73230f9d70fed6918c"
 uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 version = "1.4.0"
-
-[[deps.Latexify]]
-deps = ["Format", "Ghostscript_jll", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Requires"]
-git-tree-sha1 = "24390f715ff0795a1c4b912d788f18c52c6abd19"
-uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.16.11"
-
-    [deps.Latexify.extensions]
-    DataFramesExt = "DataFrames"
-    SparseArraysExt = "SparseArrays"
-    SymEngineExt = "SymEngine"
-    TectonicExt = "tectonic_jll"
-
-    [deps.Latexify.weakdeps]
-    DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-    SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
-    tectonic_jll = "d7dd28d6-a5e6-559c-9131-7eb760cdacc5"
 
 [[deps.LazyModules]]
 git-tree-sha1 = "a560dd966b386ac9ae60bdd3a3d3a326062d3c3e"
@@ -1542,12 +1392,6 @@ deps = ["ColorSchemes", "Colors", "Dates", "PrecompileTools", "Printf", "Random"
 git-tree-sha1 = "26ca162858917496748aad52bb5d3be4d26a228a"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.4.4"
-
-[[deps.PlutoTeachingTools]]
-deps = ["Downloads", "HypertextLiteral", "Latexify", "Markdown", "PlutoUI"]
-git-tree-sha1 = "90b41ced6bacd8c01bd05da8aed35c5458891749"
-uuid = "661c6b06-c737-4d37-b85c-46df65de6f69"
-version = "0.4.7"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Downloads", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -2147,32 +1991,28 @@ version = "4.1.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─2896d00e-fa9a-4a0d-b7bf-a629a81f49d6
-# ╟─2ce6b9dc-429d-40f0-a030-8de4f5e23823
-# ╟─24276ebf-5d60-4342-8091-f13b02c549f2
-# ╟─2953ee77-5d8f-4e4d-b2fa-689ab51dd045
-# ╟─e644c2fa-8e7b-417f-b539-c9928c4ad5ca
-# ╟─9b5a4813-53cf-433f-95b6-124b921798b6
-# ╟─a177bdd2-7a84-49de-b299-ee19402f59ee
-# ╟─8a9c8fc4-1e4a-4fc9-aa4d-61fabd9a5c09
-# ╟─5fac0cef-500c-4304-9aab-5978d996129e
-# ╟─993fc6c4-3c72-46b8-af81-db287e35b4ae
-# ╟─8c5a59a8-6433-4c6f-a66b-6d68c67b30c4
-# ╟─1bd1b2ed-a40d-4677-982d-cc11295da856
-# ╟─a55084f2-bc32-4426-8e13-4cc921dbe3a1
-# ╟─172348ff-d7ff-47e1-a459-71069f5d6252
-# ╟─9692cc0a-a5c8-4aab-9981-bdd158bf259c
-# ╟─0be96aa0-61ff-4d9a-861a-b9be4a5a1bd9
-# ╟─f5c05476-1f60-43d8-974b-036ca98a0bfe
-# ╟─21cedb47-c1e5-41c2-9729-587a55a98c0e
-# ╟─d55da34e-c1f6-4f5b-b894-1ca7ca3eff80
-# ╟─fc162686-5859-4af9-97bc-f7e75ea74fb3
-# ╟─ba812b29-e0b4-40d6-be41-9e71fed7c434
-# ╟─e232af1b-321a-47c9-88ae-207323c897f4
-# ╟─25be106d-d1ea-4ab5-9ac0-aaa7bd0d1489
-# ╟─eacca293-e591-4817-8789-2b834d3e7e0a
-# ╟─a9b1c2d3-e4f5-4321-a9b1-c2d3e4f5a6b7
-# ╟─f4de1238-05c8-41fa-8cc6-ad6fea95e963
-# ╟─cf7433f0-5ee5-4aa9-b35a-d04d8a9c4aeb
+# ╟─cd31f0b7-a386-46e5-9cfa-c145fa0260a6
+# ╟─bf9277a1-6dcb-4200-8243-7b38d300460e
+# ╟─3f9eaa91-1440-43a3-938b-98e8df9daf57
+# ╟─8f0ee3f7-9836-45c6-b389-77d9d6308f36
+# ╟─9c89bb71-ade4-4114-9cbb-34d3f6b12395
+# ╟─4ed9c622-5b22-4863-8b45-ea140cda31bc
+# ╟─f07ba571-0781-4a24-aa72-f0f7697d2b79
+# ╟─4977bef3-fdf8-4112-a793-cfe51f8c7c5d
+# ╟─6778dc16-9bd7-4db7-96fe-58cb55a74d5a
+# ╟─51cd2db3-45bb-446f-ba22-3b936425d243
+# ╟─acf731af-3eef-4b4c-a7c4-0775d2a0bd7a
+# ╟─dc520bc0-ad20-474b-9d49-c41d974162a2
+# ╟─0edecc4e-910c-4399-affd-ec192161a492
+# ╟─1517c365-6e5e-4c95-9645-d1736517d871
+# ╟─0c3c2aeb-cc6e-4efc-a95a-dc28b72f6e47
+# ╟─2dbe06ef-3a45-46fd-be7a-b3e81523cd0e
+# ╟─3a57df9b-815f-4cd7-92b0-8d0f30ef725b
+# ╟─3ac03e3e-714d-42b5-8c3b-52c882a66d12
+# ╟─d6de81af-6568-4e00-8eda-cbb2cf6ad38c
+# ╟─35368b05-37e0-43c0-93c2-d96b2a42a150
+# ╟─41e11f77-baf4-4d05-ac56-617ddf891062
+# ╟─3d2205e0-1fe8-463c-95b7-643cf07b8aaf
+# ╟─8b1065d0-8533-11f1-b6d2-8d30213e0a80
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
