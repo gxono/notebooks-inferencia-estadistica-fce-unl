@@ -37,3 +37,9 @@ Si es la primera vez, seguí los pasos de la sección **Primeros pasos** más ab
 | [legajos-bancarios-code.jl](unidades-tematicas/unidad-tematica-1/legajos-bancarios-code.jl) | Solo el código del problema de legajos bancarios, sin explicaciones |
 | [consultora-santa-fe-code.jl](unidades-tematicas/unidad-tematica-1/consultora-santa-fe-code.jl) | Solo el código del problema de la consultora de Santa Fe, sin explicaciones |
 | [legajos-bancarios-pp.jl](unidades-tematicas/unidad-tematica-1/legajos-bancarios-pp.jl) | Resolución del problema de legajos bancarios mediante programación probabilística con [Turing.jl](https://turinglang.org/) |
+
+### Unidad temática 3
+
+| Archivo | Descripción |
+|---------|-------------|
+| [U03-N01.jl](unidades-tematicas/unidad-tematica-3/U03-N01.jl) | Cuaderno publicado en el aula virtual de la materia |
