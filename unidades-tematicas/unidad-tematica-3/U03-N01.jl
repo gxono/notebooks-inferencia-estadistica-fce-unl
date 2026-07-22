@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v1.0.1
+# v1.0.3
 
 using Markdown
 using InteractiveUtils
@@ -28,6 +28,7 @@ md"""
 	using Distributions
 	using CairoMakie
 	using LaTeXStrings
+	using Random
 end
 
 # ╔═╡ cd31f0b7-a386-46e5-9cfa-c145fa0260a6
@@ -203,7 +204,7 @@ reset_nb
 md"""
 # U03-N01:DL02
 
-Para ver que no es necesario que las distribuciones sean normales, supongamos que el valor exportado sigue una distribución uniforme con medias de 1245 (zona franca) y 1087 (fuera de zona franca) y con una desviación estándar de 10 en ambos casos. Tomemos $(@bind n_muestrasu NumberField(1:1000000, default=500)) muestras distintas de 38 y 41 elementos para las empresas en zona franca y las empresas fuera de la zona franca respectivamente.
+Para ver que no es necesario que las distribuciones sean normales, supongamos que el valor exportado sigue una distribución uniforme con medias de 1245 (zona franca) y 1087 (fuera de zona franca) y con una desviación estándar de 10 en ambos casos. Tomemos $(@bind n_muestrasu NumberField(1:100000, default=500)) muestras distintas de 38 y 41 elementos para las empresas en zona franca y las empresas fuera de la zona franca respectivamente.
 """
 end
 
@@ -261,7 +262,7 @@ end
 
 # ╔═╡ 3ac03e3e-714d-42b5-8c3b-52c882a66d12
 md"""
-Podemos ver que si el tamaño de cada muestra (38 y 41, no la cantidad de muestras simuladas) es lo suficientemente grande, las distribuciones de medias tienden a una distribución acampanada esto es el Teorema Central del Límite en acción.
+Podemos ver que si el tamaño de cada muestra (38 y 41, no la cantidad de muestras simuladas) es lo suficientemente grande, las distribuciones de medias tienden a una distribución acampanada — esto es el Teorema Central del Límite en acción.
 """
 
 # ╔═╡ d6de81af-6568-4e00-8eda-cbb2cf6ad38c
@@ -288,12 +289,98 @@ let
 	ax = Axis(fig[1,1])
 
 	hist!(ax, diferencia_mediasu, bins =  1 + Int64(floor(log2(n_muestrasu))))
-	vlines!(ax, 158, color = :green, label = L"\bar{d} = 158")
+	vlines!(ax, 158, color = :green, label = L"d = 158")
 
 	axislegend()
 	
 	fig
 end
+
+# ╔═╡ 74ac5fde-73f2-450a-a166-3f106575547f
+begin
+reset_nb
+	
+md"""
+Retomemos la pregunta de la consultora privada, pero pensándola en términos de intervalos de confianza. Simulemos $(@bind n_muestras_ic Scrubbable(10:200, default=30)) diferencias de medias, y para cada una construyamos un intervalo de confianza del $(@bind nivel_confianza Scrubbable(0:0.1:99.9, default=95))%. Si el método es correcto, esperamos que ese intervalo contenga la verdadera diferencia (158) en aproximadamente ese porcentaje de las veces, ni más, ni menos.
+"""
+end
+
+# ╔═╡ ea496812-8e32-49f3-983e-160ce866c70e
+let
+Random.seed!(4)
+	
+diferencia_medias_ic = Vector{Float64}(undef, n_muestras_ic)
+extremos_medias_ic = Vector{Point2d}(undef, 2*n_muestras_ic)
+
+SE = sqrt(10^2 / 38 + 10^2 / 41)
+z = cquantile(Normal(), (1 - nivel_confianza / 100)/2)
+
+for i in 1:n_muestras_ic
+	m₁ = rand(Normal(x̄, σ), 38)
+	m₂ = rand(Normal(ȳ, σ), 41)
+	Δ = mean(m₁) - mean(m₂)
+	lower, upper = Δ - z * SE, Δ + z * SE
+
+	diferencia_medias_ic[i] = Δ
+	extremos_medias_ic[2i-1] = Point2d([i, lower])
+	extremos_medias_ic[2i] = Point2d([i, upper])
+end
+
+mask = similar(diferencia_medias_ic, Bool)
+colores = similar(mask, Symbol)
+marker = copy(colores)
+for (i, d) in enumerate(diferencia_medias_ic)
+	if abs(d - 158) <= z * SE
+		mask[i] = true
+		colores[i] = :green
+		marker[i] = :circle
+	else
+		mask[i] = false
+		colores[i] = :red
+		marker[i] = :xcross
+	end
+end
+	
+fig = Figure(size = (700, 400))
+
+ax = Axis(fig[1,1], 
+	xlabel = "Número de muestra",
+	ylabel = "Diferencia de medias (miles de USD)",
+	title = "Intervalos de confianza del $(round(nivel_confianza, digits=1))% para la diferencia de medias\n$(n_muestras_ic) muestras simuladas y $(round(Int, 100*mean(mask)))% contienen el valor verdadero")
+
+hlines!(ax, 158,
+	label = "Diferencia verdadera = 158", 
+	linestyle = :dash, 
+	color = :black)
+
+mask_ls = repeat(mask, inner = 2)
+
+linesegments!(ax, extremos_medias_ic[mask_ls], 
+	color = :green, 
+	  label = "IC contiene la diferencia verdadera")
+
+linesegments!(ax, extremos_medias_ic[.!(mask_ls)], 
+	color = :red, 
+	  label = "IC no contiene la diferencia verdadera")
+	
+scatter!(ax, 
+	eachindex(diferencia_medias_ic), 
+	diferencia_medias_ic, 
+	color = colores,
+	marker = marker,
+	markersize = -0.03 * n_muestras_ic + 10.88) #radio ajustado para evitar superposicion -> lineal por (30, 10) y (200, 5).
+
+axislegend(position= :rb)
+
+fig
+end
+
+# ╔═╡ 6ee1d0e5-796f-49a2-83da-881138e35579
+md"""
+El % de intervalos que efectivamente contienen a la diferencia verdadera (158) debería acercarse al nivel de confianza elegido, eso es lo que significa "nivel de confianza": no que este intervalo en particular sea correcto, sino que el *método* acierta esa proporción de las veces si repetimos el estudio muchas veces.
+
+Experimentá moviendo los deslizadores de arriba: probá con pocas muestras y muchas, con niveles de confianza altos (99%) y más bajos (80%), y observá cómo cambian tanto el ancho de los intervalos como el % de cobertura obtenido.
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -302,6 +389,7 @@ CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
@@ -319,7 +407,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "044d0ebf79430d15358baf94ec9ea4286b3f1359"
+project_hash = "0f428757db1852b8d9a0df30fdfb2911ee4bfed1"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -2013,6 +2101,9 @@ version = "4.1.0+0"
 # ╟─35368b05-37e0-43c0-93c2-d96b2a42a150
 # ╟─41e11f77-baf4-4d05-ac56-617ddf891062
 # ╟─3d2205e0-1fe8-463c-95b7-643cf07b8aaf
+# ╟─74ac5fde-73f2-450a-a166-3f106575547f
+# ╟─ea496812-8e32-49f3-983e-160ce866c70e
+# ╟─6ee1d0e5-796f-49a2-83da-881138e35579
 # ╟─8b1065d0-8533-11f1-b6d2-8d30213e0a80
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
