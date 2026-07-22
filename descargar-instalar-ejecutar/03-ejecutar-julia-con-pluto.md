@@ -38,7 +38,7 @@ Si el cuaderno está publicado en línea (por ejemplo en GitHub), podés pegar l
 
 Una vez ingresada la ruta o el enlace, hacé clic en **"Open"** y el cuaderno se cargará en el navegador.
 
-> **Nota:** la primera vez que abrís un cuaderno, Pluto necesita descargar y compilar todos los paquetes que usa. Esto puede llevar varios minutos. Las celdas mostrarán un símbolo de carga — es normal, no se rompió nada. Las veces siguientes el proceso es mucho más rápido.
+> **Nota:** la primera vez que abrís un cuaderno, Pluto necesita descargar y compilar todos los paquetes que usa. Esto puede llevar varios minutos. Las celdas mostrarán un símbolo de carga (es normal, no se rompió nada). Las veces siguientes el proceso es mucho más rápido.
 
 ## 4. Verificar que todo funciona
 

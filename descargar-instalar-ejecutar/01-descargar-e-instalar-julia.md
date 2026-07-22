@@ -46,4 +46,4 @@ julia --version
 
 Si la instalación fue exitosa, verás un mensaje como `julia version 1.x.x`.
 
-> **Nota:** la primera vez que Julia se ejecuta puede tardar algunos segundos en responder. Es normal — el sistema está preparando el entorno. A partir de la segunda vez es notablemente más rápido.
+> **Nota:** la primera vez que Julia se ejecuta puede tardar algunos segundos en responder. Es normal (el sistema está preparando el entorno). A partir de la segunda vez es notablemente más rápido.

@@ -10,10 +10,10 @@ Pluto permite abrir cuadernos desde una URL. Para eso necesitás el enlace al ar
 
 1. En GitHub, navegá hasta el archivo `.jl` que querés abrir.
 2. Hacé clic en el botón **"Raw"** (arriba a la derecha del contenido del archivo).
-3. Copiá la URL de la barra del navegador — va a empezar con `raw.githubusercontent.com`.
+3. Copiá la URL de la barra del navegador (va a empezar con `raw.githubusercontent.com`).
 4. Abrí Pluto, pegá esa URL en el campo **"Open a notebook"** y hacé clic en **"Open"**.
 
-Pluto descargará el cuaderno automáticamente y lo abrirá. Tené en cuenta que los cambios que hagas **no se van a guardar en GitHub** — se guardarán en un archivo temporal en tu computadora.
+Pluto descargará el cuaderno automáticamente y lo abrirá. Tené en cuenta que los cambios que hagas **no se van a guardar en GitHub**, se guardarán en un archivo temporal en tu computadora.
 
 ---
 

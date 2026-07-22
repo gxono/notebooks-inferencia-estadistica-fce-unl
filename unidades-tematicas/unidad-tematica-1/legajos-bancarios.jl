@@ -805,8 +805,8 @@ let
     fig = Figure(size = (520, 420))
     ax = Axis(fig[1, 1],
         title = "Distribución de frecuencias relativas conjuntas\nen $(repeticion_n) repeticiones",
-        xlabel = "Y — cantidad de legajos de riesgo alto",
-        ylabel = "X — cantidad de legajos de riesgo moderado",
+        xlabel = "Y (cantidad de legajos de riesgo alto)",
+        ylabel = "X (cantidad de legajos de riesgo moderado)",
         xticks = (0:2, ["Y = 0", "Y = 1", "Y = 2"]),
         yticks = (0:2, ["X = 0", "X = 1", "X = 2"]))
 

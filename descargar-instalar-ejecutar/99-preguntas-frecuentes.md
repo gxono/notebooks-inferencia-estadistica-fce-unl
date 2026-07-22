@@ -2,9 +2,9 @@
 
 ## El cuaderno tarda mucho en cargar o parece que no hace nada
 
-Es normal. La primera vez que abrís un cuaderno, Pluto descarga e instala todos los paquetes que ese cuaderno necesita. Dependiendo de tu conexión y tu computadora, puede tardar entre dos y diez minutos. Las celdas mostrarán un ícono de carga mientras trabaja — no cerrés el navegador ni la terminal.
+Es normal. La primera vez que abrís un cuaderno, Pluto descarga e instala todos los paquetes que ese cuaderno necesita. Dependiendo de tu conexión y tu computadora, puede tardar entre dos y diez minutos. Las celdas mostrarán un ícono de carga mientras trabaja (no cerrés el navegador ni la terminal).
 
-Una vez instalados, los paquetes quedan guardados en tu computadora. La próxima vez que abras el mismo cuaderno — o cualquier otro que use los mismos paquetes — no necesitará descargar nada y el proceso será notablemente más rápido.
+Una vez instalados, los paquetes quedan guardados en tu computadora. La próxima vez que abras el mismo cuaderno (o cualquier otro que use los mismos paquetes) no necesitará descargar nada y el proceso será notablemente más rápido.
 
 ---
 

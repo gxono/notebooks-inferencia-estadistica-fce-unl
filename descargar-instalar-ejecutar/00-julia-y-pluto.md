@@ -10,7 +10,7 @@ Lo que lo distingue de otros lenguajes es que combina dos cosas que suelen estar
 
 Pluto es un entorno de cuadernos interactivos para Julia. Un **cuaderno** es un documento que combina texto explicativo, fórmulas y código ejecutable en una sola pantalla, todo dentro del navegador.
 
-Lo que hace especial a Pluto frente a otros entornos similares es su **reactividad**: cuando modificás una celda, todas las celdas que dependen de ella se actualizan automáticamente. Esto permite explorar conceptos de forma inmediata — por ejemplo, cambiar el tamaño de una muestra y ver al instante cómo cambia la distribución — sin necesidad de ejecutar el cuaderno entero cada vez.
+Lo que hace especial a Pluto frente a otros entornos similares es su **reactividad**: cuando modificás una celda, todas las celdas que dependen de ella se actualizan automáticamente. Esto permite explorar conceptos de forma inmediata (por ejemplo, cambiar el tamaño de una muestra y ver al instante cómo cambia la distribución) sin necesidad de ejecutar el cuaderno entero cada vez.
 
 Además, cada cuaderno de Pluto es un archivo `.jl` válido que gestiona sus propias dependencias, por lo que no requiere configuraciones adicionales para funcionar.
 
@@ -20,13 +20,13 @@ Python y R son los lenguajes más usados en estadística y ciencia de datos, y v
 
 **Python** es un lenguaje de propósito general con una sintaxis limpia, pero el trabajo estadístico en Python se apoya casi siempre en bibliotecas como pandas o polars, cuya sintaxis es notoriamente engorrosa: operaciones conceptualmente simples requieren cadenas de métodos, índices especiales y convenciones que poco tienen que ver con la forma en que pensamos los problemas estadísticos. El código resultante es difícil de leer y de escribir para alguien que recién empieza.
 
-**R**, en cambio, sí tiene una sintaxis excelente para estadística — especialmente en su ecosistema tidyverse — y es un lenguaje muy expresivo para este dominio. El problema es otro: R es un lenguaje de dominio específico, y cuando necesitás salir de ese dominio (automatizar algo, modificar un script en detalle, trabajar con estructuras de datos generales) la experiencia se vuelve incómoda. Además, sus entornos de cuadernos (R Markdown, Quarto) no son reactivos: al modificar una celda hay que volver a ejecutar el documento completo para ver el efecto, lo que interrumpe el flujo de exploración. Y en R, escribir código eficiente a veces obliga a pensar en vectorización o en evitar ciertos patrones — detalles de rendimiento que idealmente no deberían preocuparle a alguien que está aprendiendo estadística.
+**R**, en cambio, sí tiene una sintaxis excelente para estadística (especialmente en su ecosistema tidyverse) y es un lenguaje muy expresivo para este dominio. El problema es otro: R es un lenguaje de dominio específico, y cuando necesitás salir de ese dominio (automatizar algo, modificar un script en detalle, trabajar con estructuras de datos generales) la experiencia se vuelve incómoda. Además, sus entornos de cuadernos (R Markdown, Quarto) no son reactivos: al modificar una celda hay que volver a ejecutar el documento completo para ver el efecto, lo que interrumpe el flujo de exploración. Y en R, escribir código eficiente a veces obliga a pensar en vectorización o en evitar ciertos patrones, detalles de rendimiento que idealmente no deberían preocuparle a alguien que está aprendiendo estadística.
 
 Julia con Pluto evita estos problemas:
 
 - **Notación cercana a la matemática.** En Julia, escribir una fórmula estadística se parece mucho a escribirla en papel. Esto reduce la distancia entre la teoría y el código, y permite concentrarse en los conceptos en lugar de en la sintaxis del lenguaje.
 
-- **Reactividad para aprender.** La naturaleza reactiva de Pluto es ideal para construir intuición estadística: podés modificar un parámetro — el tamaño de la muestra, la cantidad de repeticiones, los valores de la población — y observar el efecto de inmediato, sin interrumpir el hilo del razonamiento.
+- **Reactividad para aprender.** La naturaleza reactiva de Pluto es ideal para construir intuición estadística: podés modificar un parámetro (el tamaño de la muestra, la cantidad de repeticiones, los valores de la población) y observar el efecto de inmediato, sin interrumpir el hilo del razonamiento.
 
 - **Sin configuración.** Cada cuaderno instala automáticamente los paquetes que necesita. No hace falta configurar entornos, instalar librerías por separado ni resolver conflictos de versiones.
 
@@ -38,4 +38,4 @@ Julia con Pluto evita estos problemas:
 
 ---
 
-Dicho esto, Julia tiene una comunidad más pequeña que Python o R, y encontrar ayuda en internet — especialmente en español — es más difícil. Para los problemas de este curso eso no es un obstáculo real, pero conviene saberlo.
+Dicho esto, Julia tiene una comunidad más pequeña que Python o R, y encontrar ayuda en internet (especialmente en español) es más difícil. Para los problemas de este curso eso no es un obstáculo real, pero conviene saberlo.

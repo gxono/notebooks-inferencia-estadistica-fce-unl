@@ -210,8 +210,8 @@ let
     fig = Figure(size = (520, 420))
     ax = Axis(fig[1, 1],
         title = "Distribución conjunta exacta P(X, Y)",
-        xlabel = "Y — riesgo alto",
-        ylabel = "X — riesgo moderado",
+        xlabel = "Y (riesgo alto)",
+        ylabel = "X (riesgo moderado)",
         xticks = (0:2, ["Y = 0", "Y = 1", "Y = 2"]),
         yticks = (0:2, ["X = 0", "X = 1", "X = 2"]))
 
@@ -246,8 +246,8 @@ md"""
 La idea central de la **programación probabilística** es expresar el proceso generativo como un modelo en código. En lugar de derivar probabilidades analíticamente, *describimos cómo se generan los datos* y dejamos que el motor infiera las probabilidades que nos interesan.
 
 Para nuestro problema, el proceso generativo tiene dos etapas:
-1. ``X \sim \text{Hipergeométrica}(4, 8, 2)`` — cuántos moderados caen en la muestra.
-2. ``Y \mid X \sim \text{Hipergeométrica}(3, 5, 2 - X)`` — cuántos altos caen en los lugares restantes.
+1. ``X \sim \text{Hipergeométrica}(4, 8, 2)`` (cuántos moderados caen en la muestra).
+2. ``Y \mid X \sim \text{Hipergeométrica}(3, 5, 2 - X)`` (cuántos altos caen en los lugares restantes).
 
 En `Turing.jl` esto se expresa con la macro `@model`:
 """
@@ -290,7 +290,7 @@ end
 
 # ╔═╡ fa9c8834-92cf-4534-9430-5e19fe3c39cb
 md"""
-Note que el modelo `muestreo_lote` describe exactamente el mismo proceso que la fórmula de la hipergeométrica multivariada: primero se elige cuántos moderados, y luego —dado ese resultado— cuántos altos entre los lugares restantes.
+Note que el modelo `muestreo_lote` describe exactamente el mismo proceso que la fórmula de la hipergeométrica multivariada: primero se elige cuántos moderados, y luego (dado ese resultado) cuántos altos entre los lugares restantes.
 
 Esta descripción como código tiene una ventaja: puede usarse tanto para **generar datos** (simulación hacia adelante) como para **inferir parámetros** a partir de observaciones (inferencia hacia atrás).
 """
