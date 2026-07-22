@@ -1,6 +1,12 @@
 ### A Pluto.jl notebook ###
 # v1.0.3
 
+#> [frontmatter]
+#> date = "2026-07-22"
+#> 
+#>     [[frontmatter.author]]
+#>     name = "Jonatán Perren"
+
 using Markdown
 using InteractiveUtils
 
