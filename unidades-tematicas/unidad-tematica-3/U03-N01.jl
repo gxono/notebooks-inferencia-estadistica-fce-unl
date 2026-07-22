@@ -210,7 +210,7 @@ reset_nb
 md"""
 # U03-N01:DL02
 
-Para ver que no es necesario que las distribuciones sean normales, supongamos que el valor exportado sigue una distribución uniforme con medias de 1245 (zona franca) y 1087 (fuera de zona franca) y con una desviación estándar de 10 en ambos casos. Tomemos $(@bind n_muestrasu Scrubbable(100:100:2000, default = 500))) muestras distintas de 38 y 41 elementos para las empresas en zona franca y las empresas fuera de la zona franca respectivamente.
+Para ver que no es necesario que las distribuciones sean normales, supongamos que el valor exportado sigue una distribución uniforme con medias de 1245 (zona franca) y 1087 (fuera de zona franca) y con una desviación estándar de 10 en ambos casos. Tomemos $(@bind n_muestrasu Scrubbable(100:100:2000, default = 500)) muestras distintas de 38 y 41 elementos para las empresas en zona franca y las empresas fuera de la zona franca respectivamente.
 """
 end
 
@@ -250,19 +250,56 @@ A continuación, veamos la distribución de medias de estas muestras proveniente
 
 # ╔═╡ 3a57df9b-815f-4cd7-92b0-8d0f30ef725b
 let
+fig = Figure(size = (700, 200))
+
+ax1 = Axis(fig[1,1],
+    xlabel = "Media de las muestras",
+    ylabel = "Frecuencia",
+    title = "Dist. de medias para zona franca")
+hist!(ax1, first.(mediasu))
+vlines!(ax1, 1245, color = :black, label = L"\bar{x} = 1245")
+axislegend()
+
+
+ax2 = Axis(fig[1,2],
+    xlabel = "Media de las muestras",
+    ylabel = "Frecuencia",
+    title = "Dist. de medias para zona no franca")
+hist!(ax2, last.(mediasu))
+vlines!(ax2, 1087, color = :black, label = L"\bar{y} = 1087")
+
+axislegend()
+fig
+end
+
+# ╔═╡ 8d5f5f7e-5e91-4877-bbac-02ce34cb6315
+md"""
+Si estandarizamos las variables ``\bar{X}`` e ``\bar{Y}`` según
+
+```math
+Z_X = \frac{\bar{X} - \mu_X}{\sigma_X / \sqrt{n_X}} \quad\text{y}\quad Z_Y = \frac{\bar{Y} - \mu_Y}{\sigma_Y / \sqrt{n_Y}}
+```
+
+tenemos las siguientes gráficas.
+"""
+
+# ╔═╡ b4188460-c545-4435-948a-1b3662e4e639
+let
 	fig = Figure(size = (700, 200))
 
+	xs = range(-4, 4, length = 100)
+	yn = pdf.(Normal(), xs)
+	
 	ax1 = Axis(fig[1,1], title = "Dist. de medias para zona franca")
-	hist!(ax1, first.(mediasu))
-	vlines!(ax1, 1245, color = :green, label = L"\bar{x} = 1245")
+	hist!(ax1, zscore(first.(mediasu), x̄, σ/sqrt(38)), normalization = :pdf)
+	lines!(ax1, xs, yn, color = :black, xautolimits = false, label = "N(0, 1)")
 	axislegend()
-	
-	
+
 	ax2 = Axis(fig[1,2], title = "Dist. de medias para zona no franca")
-	hist!(ax2, last.(mediasu))
-	vlines!(ax2, 1087, color = :green, label = L"\bar{y} = 1087")
-	
+	hist!(ax2, zscore(last.(mediasu), ȳ, σ/sqrt(41)), normalization = :pdf)
+	lines!(ax2, xs, yn, color = :black, xautolimits = false, label = "N(0, 1)")
 	axislegend()
+	
 	fig
 end
 
@@ -291,15 +328,32 @@ Dado que la diferencia de medias es una combinación lineal de las medias, es de
 
 # ╔═╡ 3d2205e0-1fe8-463c-95b7-643cf07b8aaf
 let
-	fig = Figure(size = (700, 400))
-	ax = Axis(fig[1,1])
+fig = Figure(size = (700, 200))
+ax = Axis(fig[1,1], 
+	xlabel = "Diferencia de medias",
+	  ylabel = "Frecuencia",
+	title = "Distribución sin estandarizar (frecuencias)")
 
-	hist!(ax, diferencia_mediasu, bins =  1 + Int64(floor(log2(n_muestrasu))))
-	vlines!(ax, 158, color = :green, label = L"d = 158")
+hist!(ax, diferencia_mediasu, bins =  1 + Int64(floor(log2(n_muestrasu))))
+vlines!(ax, 158, color = :black, label = L"d = 158")
 
-	axislegend()
-	
-	fig
+axislegend()
+
+
+ax2 = Axis(fig[1,2], title = "Distribución estandarizada (densidad)")
+
+xs = range(-4, 4, length = 100)
+yn = pdf.(Normal(), xs)
+SE = sqrt(σ^2/38 + σ^2/41)
+hist!(ax2, zscore(diferencia_mediasu, 158, SE),
+	  bins =  1 + Int64(floor(log2(n_muestrasu))),
+	 normalization = :pdf)
+
+lines!(ax2, xs, yn, label = "N(0, 1)", color = :black, xautolimits = false)
+
+axislegend()
+
+fig
 end
 
 # ╔═╡ 74ac5fde-73f2-450a-a166-3f106575547f
@@ -2102,6 +2156,8 @@ version = "4.1.0+0"
 # ╟─0c3c2aeb-cc6e-4efc-a95a-dc28b72f6e47
 # ╟─2dbe06ef-3a45-46fd-be7a-b3e81523cd0e
 # ╟─3a57df9b-815f-4cd7-92b0-8d0f30ef725b
+# ╟─8d5f5f7e-5e91-4877-bbac-02ce34cb6315
+# ╟─b4188460-c545-4435-948a-1b3662e4e639
 # ╟─3ac03e3e-714d-42b5-8c3b-52c882a66d12
 # ╟─d6de81af-6568-4e00-8eda-cbb2cf6ad38c
 # ╟─35368b05-37e0-43c0-93c2-d96b2a42a150
