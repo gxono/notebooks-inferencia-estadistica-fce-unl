@@ -73,7 +73,7 @@ reset_nb
 md"""
 # U03-N01:DL01
 
-Para responder esta pregunta, simulemos qué pasaría si se repitiera el relevamiento con nuevas muestras aleatorias de las mismas poblaciones. Tomemos $(@bind n_muestras Scrubbable(1:500, default = 20)) muestras distintas de 38 y 41 elementos para las empresas en zona franca y las empresas fuera de la zona franca respectivamente, asumiendo que las medias poblacionales son efectivamente 1245 y 1087 (los valores relevados) y que el desvío poblacional en ambos casos es de 10, tal como se supuso en el enunciado.
+Para responder esta pregunta, simulemos qué pasaría si se repitiera el relevamiento con nuevas muestras aleatorias de las mismas poblaciones. Tomemos $(@bind n_muestras Scrubbable(1:200, default = 20)) muestras distintas de 38 y 41 elementos para las empresas en zona franca y las empresas fuera de la zona franca respectivamente, asumiendo que las medias poblacionales son efectivamente 1245 y 1087 (los valores relevados) y que el desvío poblacional en ambos casos es de 10, tal como se supuso en el enunciado.
 
 Los resultados se pueden ver en la siguiente lista, en donde el primer elemento del par ordenado es la media para las empresas en zona franca (``\bar{x}``) y el segundo elemento es la media para las empresas fuera de zona franca (``\bar{y}``).
 """
@@ -116,41 +116,47 @@ Veamos un gráfico para representar los valores de las medias de cada muestra.
 
 # ╔═╡ 6778dc16-9bd7-4db7-96fe-58cb55a74d5a
 let
-	fig = Figure(size = (700, 400))
+fig = Figure(size = (700, 200))
 
-	ax = Axis(fig[1,1],
-		xlabel = "Número de muestra",
-		ylabel = "Media muestral")
+ax = Axis(fig[1,1],
+	xlabel = "Número de muestra",
+	ylabel = "Media muestral")
 
-	puntos_media_m1 = [Point2d([i, m]) for (i, m) in enumerate(first.(medias))]
-	puntos_media_m2 = [Point2d([i, m]) for (i, m) in enumerate(last.(medias))]
+puntos_media_m1 = [Point2d([i, m]) for (i, m) in enumerate(first.(medias))]
+puntos_media_m2 = [Point2d([i, m]) for (i, m) in enumerate(last.(medias))]
 
-	hlines!(ax, 1245, color = :blue, linestyle = :dash)
-	hlines!(ax, 1087, color = :red, linestyle = :dash)
+hlines!(ax, 1245, color = :blue, linestyle = :dash)
+hlines!(ax, 1087, color = :red, linestyle = :dash)
+
+linesegments!(ax, collect(zip(puntos_media_m1, puntos_media_m2)))
+
+scatter!(ax, puntos_media_m1,
+	color = :blue,
+	markersize = (-0.03 * n_muestras + 10.88)*0.75)
 	
-	linesegments!(ax, collect(zip(puntos_media_m1, puntos_media_m2)))
-	scatter!(ax, puntos_media_m1, color = :blue)
-	scatter!(ax, puntos_media_m2, color = :red)
+scatter!(ax, puntos_media_m2, 
+	color = :red,
+	markersize = (-0.03 * n_muestras + 10.88)*0.75)
 
-	ax2 = Axis(fig[1,2])
-	linkyaxes!(ax, ax2)
-	xlims!(ax2, 0, nothing)
-	hidedecorations!(ax2)
-	hidespines!(ax2)
-	colgap!(fig.layout, 1, Fixed(5))
-	colsize!(fig.layout, 2, Fixed(75))
+ax2 = Axis(fig[1,2])
+linkyaxes!(ax, ax2)
+xlims!(ax2, 0, nothing)
+hidedecorations!(ax2)
+hidespines!(ax2)
+colgap!(fig.layout, 1, Fixed(5))
+colsize!(fig.layout, 2, Fixed(75))
 
-	etiqueta(n, idx, c) = text!(ax2, 0, n, 
-	   text = L"\bar{%$idx} = %$n", 
-	   align = (:left, :baseline), 
-	   font = :bold, 
-	   color = c)
-	
-	etiqueta(1245, "x", :blue)
-	etiqueta(1087, "y", :red)
+etiqueta(n, idx, c) = text!(ax2, 0, n, 
+   text = L"\bar{%$idx} = %$n", 
+   align = (:left, :center), 
+   font = :bold, 
+   color = c)
 
-	
-	fig
+etiqueta(1245, "x", :blue)
+etiqueta(1087, "y", :red)
+
+
+fig
 end
 
 # ╔═╡ 51cd2db3-45bb-446f-ba22-3b936425d243
@@ -160,7 +166,7 @@ Si graficamos estas diferencias por separado, para notar mejor sus amplitudes, t
 
 # ╔═╡ acf731af-3eef-4b4c-a7c4-0775d2a0bd7a
 let
-	fig = Figure(size = (700, 400))
+	fig = Figure(size = (700, 200))
 
 	ax = Axis(fig[1,1],
 		xlabel = "Número de muestra",
@@ -185,7 +191,7 @@ let
 
 	text!(ax2, 0, 158, 
 	   text = L"d = 158", 
-	   align = (:left, :baseline), 
+	   align = (:left, :center), 
 	   font = :bold, 
 	   color = :green)
 	
@@ -204,7 +210,7 @@ reset_nb
 md"""
 # U03-N01:DL02
 
-Para ver que no es necesario que las distribuciones sean normales, supongamos que el valor exportado sigue una distribución uniforme con medias de 1245 (zona franca) y 1087 (fuera de zona franca) y con una desviación estándar de 10 en ambos casos. Tomemos $(@bind n_muestrasu NumberField(1:100000, default=500)) muestras distintas de 38 y 41 elementos para las empresas en zona franca y las empresas fuera de la zona franca respectivamente.
+Para ver que no es necesario que las distribuciones sean normales, supongamos que el valor exportado sigue una distribución uniforme con medias de 1245 (zona franca) y 1087 (fuera de zona franca) y con una desviación estándar de 10 en ambos casos. Tomemos $(@bind n_muestrasu Scrubbable(100:100:2000, default = 500))) muestras distintas de 38 y 41 elementos para las empresas en zona franca y las empresas fuera de la zona franca respectivamente.
 """
 end
 
@@ -262,7 +268,7 @@ end
 
 # ╔═╡ 3ac03e3e-714d-42b5-8c3b-52c882a66d12
 md"""
-Podemos ver que si el tamaño de cada muestra (38 y 41, no la cantidad de muestras simuladas) es lo suficientemente grande, las distribuciones de medias tienden a una distribución acampanada — esto es el Teorema Central del Límite en acción.
+Podemos ver que si el tamaño de cada muestra (38 y 41, no la cantidad de muestras simuladas) es lo suficientemente grande, las distribuciones de medias tienden a una distribución acampanada, esto es el Teorema Central del Límite en acción.
 """
 
 # ╔═╡ d6de81af-6568-4e00-8eda-cbb2cf6ad38c
