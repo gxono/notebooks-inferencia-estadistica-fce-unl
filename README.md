@@ -28,18 +28,18 @@ Si es la primera vez, seguí los pasos de la sección **Primeros pasos** más ab
 | [99-preguntas-frecuentes.md](descargar-instalar-ejecutar/99-preguntas-frecuentes.md) | Problemas frecuentes y cómo resolverlos |
 | [cuaderno-de-prueba.jl](descargar-instalar-ejecutar/cuaderno-de-prueba.jl) | Cuaderno de prueba para verificar que la instalación funciona correctamente |
 
-### Unidad temática 1
+### Cuadernos publicados
 
-| Archivo | Descripción |
-|---------|-------------|
-| [U01-N01.jl](unidades-tematicas/unidad-tematica-1/U01-N01.jl) | Cuaderno publicado en el aula virtual de la materia |
-| [legajos-bancarios.jl](unidades-tematicas/unidad-tematica-1/legajos-bancarios.jl) | Resolución paso a paso del problema de legajos bancarios en Julia |
-| [legajos-bancarios-code.jl](unidades-tematicas/unidad-tematica-1/legajos-bancarios-code.jl) | Solo el código del problema de legajos bancarios, sin explicaciones |
-| [consultora-santa-fe-code.jl](unidades-tematicas/unidad-tematica-1/consultora-santa-fe-code.jl) | Solo el código del problema de la consultora de Santa Fe, sin explicaciones |
-| [legajos-bancarios-pp.jl](unidades-tematicas/unidad-tematica-1/legajos-bancarios-pp.jl) | Resolución del problema de legajos bancarios mediante programación probabilística con [Turing.jl](https://turinglang.org/) |
+| Archivo | Unidad | Descripción |
+|---------|:------:|-------------|
+| [U01-N01.jl](unidades-tematicas/unidad-tematica-1/U01-N01.jl) | 1 | Cuaderno publicado en el aula virtual de la materia |
+| [U03-N01.jl](unidades-tematicas/unidad-tematica-3/U03-N01.jl) | 3 | Cuaderno publicado en el aula virtual de la materia |
 
-### Unidad temática 3
+### Material complementario
 
-| Archivo | Descripción |
-|---------|-------------|
-| [U03-N01.jl](unidades-tematicas/unidad-tematica-3/U03-N01.jl) | Cuaderno publicado en el aula virtual de la materia |
+| Archivo | Unidad | Descripción |
+|---------|:------:|-------------|
+| [legajos-bancarios.jl](unidades-tematicas/unidad-tematica-1/legajos-bancarios.jl) | 1 | Resolución paso a paso del problema de legajos bancarios en Julia |
+| [legajos-bancarios-code.jl](unidades-tematicas/unidad-tematica-1/legajos-bancarios-code.jl) | 1 | Solo el código del problema de legajos bancarios, sin explicaciones |
+| [consultora-santa-fe-code.jl](unidades-tematicas/unidad-tematica-1/consultora-santa-fe-code.jl) | 1 | Solo el código del problema de la consultora de Santa Fe, sin explicaciones |
+| [legajos-bancarios-pp.jl](unidades-tematicas/unidad-tematica-1/legajos-bancarios-pp.jl) | 1 | Resolución del problema de legajos bancarios mediante programación probabilística con [Turing.jl](https://turinglang.org/) |
