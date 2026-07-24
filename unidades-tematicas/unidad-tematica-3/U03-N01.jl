@@ -127,15 +127,15 @@ fig = Figure(size = (700, 200))
 ax = Axis(fig[1,1],
 	xlabel = "Número de muestra",
 	ylabel = "Media muestral")
-
+	
 puntos_media_m1 = [Point2d([i, m]) for (i, m) in enumerate(first.(medias))]
 puntos_media_m2 = [Point2d([i, m]) for (i, m) in enumerate(last.(medias))]
 
 hlines!(ax, 1245, color = :blue, linestyle = :dash)
 hlines!(ax, 1087, color = :red, linestyle = :dash)
 
-linesegments!(ax, collect(zip(puntos_media_m1, puntos_media_m2)))
-
+rangebars!(ax, eachindex(medias), medias)
+	
 scatter!(ax, puntos_media_m1,
 	color = :blue,
 	markersize = (-0.03 * n_muestras + 10.88)*0.75)
@@ -143,7 +143,7 @@ scatter!(ax, puntos_media_m1,
 scatter!(ax, puntos_media_m2, 
 	color = :red,
 	markersize = (-0.03 * n_muestras + 10.88)*0.75)
-
+	
 ax2 = Axis(fig[1,2])
 linkyaxes!(ax, ax2)
 xlims!(ax2, 0, nothing)
@@ -178,14 +178,11 @@ let
 		xlabel = "Número de muestra",
 		ylabel = "Diferencia de medias")
 
-
-	puntos_base = [Point2d([i, 0]) for i in eachindex(medias)]
-	puntos_diferencia = [Point2d([i, d]) for (i, d) in enumerate(diferencia_medias)]
-
 	hlines!(ax, 158, color = :green)
 	
-	linesegments!(ax, collect(zip(puntos_base, puntos_diferencia)))
-	scatter!(ax, vcat(puntos_base, puntos_diferencia), marker = :hline)
+	rangebars!(ax,
+		eachindex(medias), zeros(length(diferencia_medias)), diferencia_medias,
+		whiskerwidth = 5)
 
 	ax2 = Axis(fig[1,2])
 	linkyaxes!(ax, ax2)
