@@ -376,36 +376,19 @@ let
 Random.seed!(4)
 	
 diferencia_medias_ic = Vector{Float64}(undef, n_muestras_ic)
-extremos_medias_ic = Vector{Point2d}(undef, 2*n_muestras_ic)
 
 SE = sqrt(10^2 / 38 + 10^2 / 41)
 z = cquantile(Normal(), (1 - nivel_confianza / 100)/2)
+err = z * SE
 
 for i in 1:n_muestras_ic
-	m₁ = rand(Normal(x̄, σ), 38)
-	m₂ = rand(Normal(ȳ, σ), 41)
-	Δ = mean(m₁) - mean(m₂)
-	lower, upper = Δ - z * SE, Δ + z * SE
+	m1 = rand(Normal(x̄, σ), 38)
+	m2 = rand(Normal(ȳ, σ), 41)
 
-	diferencia_medias_ic[i] = Δ
-	extremos_medias_ic[2i-1] = Point2d([i, lower])
-	extremos_medias_ic[2i] = Point2d([i, upper])
+	diferencia_medias_ic[i] = mean(m1) - mean(m2)
 end
 
-mask = similar(diferencia_medias_ic, Bool)
-colores = similar(mask, Symbol)
-marker = copy(colores)
-for (i, d) in enumerate(diferencia_medias_ic)
-	if abs(d - 158) <= z * SE
-		mask[i] = true
-		colores[i] = :green
-		marker[i] = :circle
-	else
-		mask[i] = false
-		colores[i] = :red
-		marker[i] = :xcross
-	end
-end
+mask = [abs(d - 158) <= err for d in diferencia_medias_ic]
 	
 fig = Figure(size = (700, 400))
 
@@ -419,21 +402,22 @@ hlines!(ax, 158,
 	linestyle = :dash, 
 	color = :black)
 
-mask_ls = repeat(mask, inner = 2)
-
-linesegments!(ax, extremos_medias_ic[mask_ls], 
+errorbars!(ax,
+	eachindex(diferencia_medias_ic)[mask], diferencia_medias_ic[mask], err,
 	color = :green, 
-	  label = "IC contiene la diferencia verdadera")
+	label = "IC contiene la diferencia verdadera",
+	  whiskerwidth = 5)
 
-linesegments!(ax, extremos_medias_ic[.!(mask_ls)], 
+errorbars!(ax,
+	eachindex(diferencia_medias_ic)[.!(mask)], diferencia_medias_ic[.!(mask)], err,
 	color = :red, 
-	  label = "IC no contiene la diferencia verdadera")
+	label = "IC no contiene la diferencia verdadera",
+	  whiskerwidth = 5)
 	
 scatter!(ax, 
-	eachindex(diferencia_medias_ic), 
-	diferencia_medias_ic, 
-	color = colores,
-	marker = marker,
+	eachindex(diferencia_medias_ic), diferencia_medias_ic, 
+	color = ifelse.(mask, :green, :red),
+	marker = ifelse.(mask, :circle, :xcross),
 	markersize = -0.03 * n_muestras_ic + 10.88) #radio ajustado para evitar superposicion -> lineal por (30, 10) y (200, 5).
 
 axislegend(position= :rb)
