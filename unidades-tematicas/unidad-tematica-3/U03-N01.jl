@@ -32,10 +32,17 @@ md"""
 	using Statistics
 	using StatsBase
 	using Distributions
-	using CairoMakie
+	using WGLMakie
 	using LaTeXStrings
 	using Random
-end
+	using Observables
+
+
+	lock_axis = (
+		xrectzoom = false, yrectzoom = false, 
+		xzoomlock = true, yzoomlock = true, 
+		ypanlock = true, xpanlock = true)
+end;
 
 # ╔═╡ cd31f0b7-a386-46e5-9cfa-c145fa0260a6
 md"""🔄 *Reiniciar cuaderno* $(@bind reset_nb CounterButton("Reiniciar"))"""
@@ -75,7 +82,10 @@ Una consultora privada realizó el relevamiento de igual forma pero dice que lle
 # ╔═╡ 8f0ee3f7-9836-45c6-b389-77d9d6308f36
 begin
 reset_nb
-	
+
+n_muestras_obs = Observable(20)
+x̄, ȳ, σ = 1245, 1087, 10
+
 md"""
 # U03-N01:DL01
 
@@ -86,20 +96,25 @@ Los resultados se pueden ver en la siguiente lista, en donde el primer elemento 
 
 end
 
+# ╔═╡ 947051d3-b9c7-402d-9664-00c8a01d8eba
+n_muestras_obs[] = n_muestras;
+
 # ╔═╡ 9c89bb71-ade4-4114-9cbb-34d3f6b12395
 begin
-x̄, ȳ, σ = 1245, 1087, 10
-medias = Vector{Tuple{Float64, Float64}}(undef, n_muestras)
+function calcular_medias(n)
+	vals = Vector{Tuple{Float64, Float64}}(undef, n)
+	for i in 1:n
+		m₁ = rand(Normal(x̄, σ), 38)
+		m₂ = rand(Normal(ȳ, σ), 41)
 
-for i in 1:n_muestras
-	m₁ = rand(Normal(x̄, σ), 38)
-	m₂ = rand(Normal(ȳ, σ), 41)
-
-	medias[i] = (mean(m₁), mean(m₂))
+		vals[i] = (mean(m₁), mean(m₂))
+	end
+	vals
 end
 
-@info "Muestra de medias distintas" medias
-	
+medias_obs = @lift calcular_medias($n_muestras_obs)
+
+@info "Medias:" medias_obs[]
 end
 
 # ╔═╡ 4ed9c622-5b22-4863-8b45-ea140cda31bc
@@ -109,10 +124,9 @@ Calculamos ahora las diferencias para estas medias, y obtenemos la siguiente lis
 
 # ╔═╡ f07ba571-0781-4a24-aa72-f0f7697d2b79
 begin
+	diferencia_medias_obs = @lift [m₁ - m₂ for (m₁, m₂) in $medias_obs]
 
-diferencia_medias = [m₁ - m₂ for (m₁, m₂) in medias]
-
-@info "Diferencia de medias de la lista anterior" diferencia_medias
+	@info "Diferencia de medias:" diferencia_medias_obs[]
 end
 
 # ╔═╡ 4977bef3-fdf8-4112-a793-cfe51f8c7c5d
@@ -122,47 +136,51 @@ Veamos un gráfico para representar los valores de las medias de cada muestra.
 
 # ╔═╡ 6778dc16-9bd7-4db7-96fe-58cb55a74d5a
 let
-fig = Figure(size = (700, 200))
+	fig = Figure(size = (700, 200))
 
-ax = Axis(fig[1,1],
-	xlabel = "Número de muestra",
-	ylabel = "Media muestral")
-	
-puntos_media_m1 = [Point2d([i, m]) for (i, m) in enumerate(first.(medias))]
-puntos_media_m2 = [Point2d([i, m]) for (i, m) in enumerate(last.(medias))]
+	ax = Axis(fig[1,1],
+		xlabel = "Número de muestra",
+		ylabel = "Media muestral"; lock_axis...)
 
-hlines!(ax, 1245, color = :blue, linestyle = :dash)
-hlines!(ax, 1087, color = :red, linestyle = :dash)
+	idx_obs = @lift eachindex($medias_obs)
+	puntos_media_m1 = @lift([Point2d([i, m]) for (i, m) in enumerate(first.($medias_obs))])
+	puntos_media_m2 = @lift([Point2d([i, m]) for (i, m) in enumerate(last.($medias_obs))])
 
-rangebars!(ax, eachindex(medias), medias)
-	
-scatter!(ax, puntos_media_m1,
-	color = :blue,
-	markersize = (-0.03 * n_muestras + 10.88)*0.75)
-	
-scatter!(ax, puntos_media_m2, 
-	color = :red,
-	markersize = (-0.03 * n_muestras + 10.88)*0.75)
-	
-ax2 = Axis(fig[1,2])
-linkyaxes!(ax, ax2)
-xlims!(ax2, 0, nothing)
-hidedecorations!(ax2)
-hidespines!(ax2)
-colgap!(fig.layout, 1, Fixed(5))
-colsize!(fig.layout, 2, Fixed(75))
+	hlines!(ax, 1245, color = :blue, linestyle = :dash)
+	hlines!(ax, 1087, color = :red, linestyle = :dash)
 
-etiqueta(n, idx, c) = text!(ax2, 0, n, 
-   text = L"\bar{%$idx} = %$n", 
-   align = (:left, :center), 
-   font = :bold, 
-   color = c)
+	rangebars!(ax, idx_obs, medias_obs)
 
-etiqueta(1245, "x", :blue)
-etiqueta(1087, "y", :red)
+	scatter!(ax, puntos_media_m1,
+		color = :blue,
+		markersize = @lift((-0.03 * $n_muestras_obs + 10.88)*0.75))
 
+	scatter!(ax, puntos_media_m2,
+		color = :red,
+		markersize = @lift((-0.03 * $n_muestras_obs + 10.88)*0.75))
 
-fig
+	ax2 = Axis(fig[1,2]; lock_axis...)
+	linkyaxes!(ax, ax2)
+	xlims!(ax2, 0, nothing)
+	hidedecorations!(ax2)
+	hidespines!(ax2)
+	colgap!(fig.layout, 1, Fixed(5))
+	colsize!(fig.layout, 2, Fixed(75))
+
+	etiqueta(n, idx, c) = text!(ax2, 0, n,
+	   text = L"\bar{%$idx} = %$n",
+	   align = (:left, :center),
+	   font = :bold,
+	   color = c)
+
+	etiqueta(1245, "x", :blue)
+	etiqueta(1087, "y", :red)
+
+	on(medias_obs) do _
+		autolimits!(ax)
+	end
+
+	fig
 end
 
 # ╔═╡ 51cd2db3-45bb-446f-ba22-3b936425d243
@@ -176,15 +194,17 @@ let
 
 	ax = Axis(fig[1,1],
 		xlabel = "Número de muestra",
-		ylabel = "Diferencia de medias")
+		ylabel = "Diferencia de medias"; lock_axis...)
 
 	hlines!(ax, 158, color = :green)
-	
-	rangebars!(ax,
-		eachindex(medias), zeros(length(diferencia_medias)), diferencia_medias,
+
+	idx_obs = @lift eachindex($diferencia_medias_obs)
+	ceros_obs = @lift zeros(length($diferencia_medias_obs))
+
+	rangebars!(ax, idx_obs, ceros_obs, diferencia_medias_obs,
 		whiskerwidth = 5)
 
-	ax2 = Axis(fig[1,2])
+	ax2 = Axis(fig[1,2]; lock_axis...)
 	linkyaxes!(ax, ax2)
 	xlims!(ax2, 0, nothing)
 	hidedecorations!(ax2)
@@ -192,12 +212,16 @@ let
 	colgap!(fig.layout, 1, Fixed(5))
 	colsize!(fig.layout, 2, Fixed(75))
 
-	text!(ax2, 0, 158, 
-	   text = L"d = 158", 
-	   align = (:left, :center), 
-	   font = :bold, 
+	text!(ax2, 0, 158,
+	   text = L"d = 158",
+	   align = (:left, :center),
+	   font = :bold,
 	   color = :green)
-	
+
+	on(diferencia_medias_obs) do _
+		autolimits!(ax)
+	end
+
 	fig
 end
 
@@ -209,7 +233,8 @@ Como podemos ver, hay variabilidad en las posibles diferencias de medias, aunque
 # ╔═╡ 0edecc4e-910c-4399-affd-ec192161a492
 begin
 reset_nb
-	
+n_muestrasu_obs = Observable(500)
+
 md"""
 # U03-N01:DL02
 
@@ -217,32 +242,37 @@ Para ver que no es necesario que las distribuciones sean normales, supongamos qu
 """
 end
 
+# ╔═╡ da94363e-8a97-48cb-bc4e-111b3f94ca9a
+n_muestrasu_obs[] = n_muestrasu;
+
 # ╔═╡ 0c3c2aeb-cc6e-4efc-a95a-dc28b72f6e47
 begin
 uniforme_con(μ, σ) = Uniform(μ - σ*sqrt(3), μ + σ*sqrt(3))
-	
-mediasu = Vector{Tuple{Float64, Float64}}(undef, n_muestrasu)
 
-for i in 1:n_muestrasu
-	m₁ = rand(uniforme_con(x̄, σ), 38)
-	m₂ = rand(uniforme_con(ȳ, σ), 41)
+function calcular_mediasu(n)
+	vals = Vector{Tuple{Float64, Float64}}(undef, n)
+	for i in 1:n
+		m₁ = rand(uniforme_con(x̄, σ), 38)
+		m₂ = rand(uniforme_con(ȳ, σ), 41)
 
-	mediasu[i] = (mean(m₁), mean(m₂))
+		vals[i] = (mean(m₁), mean(m₂))
+	end
+	vals
 end
 
-@info "Muestra de medias distintas" mediasu
-end
+mediasu_obs = @lift calcular_mediasu($n_muestrasu_obs)
+end;
 
 # ╔═╡ 1517c365-6e5e-4c95-9645-d1736517d871
 let
 	fig = Figure(size = (700, 200))
 
-	ax1 = Axis(fig[1,1], title = "Una muestra para zona franca (n = 38)")
+	ax1 = Axis(fig[1,1], title = "Una muestra para zona franca (n = 38)"; lock_axis...)
 	hist!(ax1, rand(uniforme_con(x̄, σ), 38))
 
-	ax2 = Axis(fig[1,2], title = "Una muestra para zona no franca (n = 41)")
-	hist!(ax2, rand(uniforme_con(ȳ, σ), 41))
-	
+	ax2 = Axis(fig[1,2], title = "Una muestra para zona no franca (n = 41)"; lock_axis...)
+	hist!(ax2, rand(uniforme_con(ȳ, σ), 41))
+
 	fig
 end
 
@@ -253,26 +283,33 @@ A continuación, veamos la distribución de medias de estas muestras proveniente
 
 # ╔═╡ 3a57df9b-815f-4cd7-92b0-8d0f30ef725b
 let
-fig = Figure(size = (700, 200))
+	fig = Figure(size = (700, 200))
 
-ax1 = Axis(fig[1,1],
-    xlabel = "Media de las muestras",
-    ylabel = "Frecuencia",
-    title = "Dist. de medias para zona franca")
-hist!(ax1, first.(mediasu))
-vlines!(ax1, 1245, color = :black, label = L"\bar{x} = 1245")
-axislegend()
+	primeras = @lift(first.($mediasu_obs))
+	segundas = @lift(last.($mediasu_obs))
 
+	ax1 = Axis(fig[1,1],
+	    xlabel = "Media de las muestras",
+	    ylabel = "Frecuencia",
+	    title = "Dist. de medias para zona franca"; lock_axis...)
+	hist!(ax1, primeras)
+	vlines!(ax1, 1245, color = :black, label = L"\bar{x} = 1245")
+	axislegend(ax1)
 
-ax2 = Axis(fig[1,2],
-    xlabel = "Media de las muestras",
-    ylabel = "Frecuencia",
-    title = "Dist. de medias para zona no franca")
-hist!(ax2, last.(mediasu))
-vlines!(ax2, 1087, color = :black, label = L"\bar{y} = 1087")
+	ax2 = Axis(fig[1,2],
+	    xlabel = "Media de las muestras",
+	    ylabel = "Frecuencia",
+	    title = "Dist. de medias para zona no franca"; lock_axis...)
+	hist!(ax2, segundas)
+	vlines!(ax2, 1087, color = :black, label = L"\bar{y} = 1087")
+	axislegend(ax2)
 
-axislegend()
-fig
+	on(mediasu_obs) do _
+		autolimits!(ax1)
+		autolimits!(ax2)
+	end
+
+	fig
 end
 
 # ╔═╡ 8d5f5f7e-5e91-4877-bbac-02ce34cb6315
@@ -292,17 +329,25 @@ let
 
 	xs = range(-4, 4, length = 100)
 	yn = pdf.(Normal(), xs)
-	
-	ax1 = Axis(fig[1,1], title = "Dist. de medias para zona franca")
-	hist!(ax1, zscore(first.(mediasu), x̄, σ/sqrt(38)), normalization = :pdf)
-	lines!(ax1, xs, yn, color = :black, xautolimits = false, label = "N(0, 1)")
-	axislegend()
 
-	ax2 = Axis(fig[1,2], title = "Dist. de medias para zona no franca")
-	hist!(ax2, zscore(last.(mediasu), ȳ, σ/sqrt(41)), normalization = :pdf)
+	z1 = @lift(zscore(first.($mediasu_obs), x̄, σ/sqrt(38)))
+	z2 = @lift(zscore(last.($mediasu_obs), ȳ, σ/sqrt(41)))
+
+	ax1 = Axis(fig[1,1], title = "Dist. de medias para zona franca"; lock_axis...)
+	hist!(ax1, z1, normalization = :pdf)
+	lines!(ax1, xs, yn, color = :black, xautolimits = false, label = "N(0, 1)")
+	axislegend(ax1)
+
+	ax2 = Axis(fig[1,2], title = "Dist. de medias para zona no franca"; lock_axis...)
+	hist!(ax2, z2, normalization = :pdf)
 	lines!(ax2, xs, yn, color = :black, xautolimits = false, label = "N(0, 1)")
-	axislegend()
-	
+	axislegend(ax2)
+
+	on(mediasu_obs) do _
+		autolimits!(ax1)
+		autolimits!(ax2)
+	end
+
 	fig
 end
 
@@ -319,10 +364,9 @@ Nuevamente, calculemos la diferencia de medias.
 # ╔═╡ 35368b05-37e0-43c0-93c2-d96b2a42a150
 begin
 
-diferencia_mediasu = [m₁ - m₂ for (m₁, m₂) in mediasu]
+diferencia_mediasu_obs = @lift [m₁ - m₂ for (m₁, m₂) in $mediasu_obs]
 
-@info "Diferencia de medias de la lista anterior" diferencia_mediasu
-end
+end;
 
 # ╔═╡ 41e11f77-baf4-4d05-ac56-617ddf891062
 md"""
@@ -331,38 +375,44 @@ Dado que la diferencia de medias es una combinación lineal de las medias, es de
 
 # ╔═╡ 3d2205e0-1fe8-463c-95b7-643cf07b8aaf
 let
-fig = Figure(size = (700, 200))
-ax = Axis(fig[1,1], 
-	xlabel = "Diferencia de medias",
-	  ylabel = "Frecuencia",
-	title = "Distribución sin estandarizar (frecuencias)")
+	fig = Figure(size = (700, 200))
 
-hist!(ax, diferencia_mediasu, bins =  1 + Int64(floor(log2(n_muestrasu))))
-vlines!(ax, 158, color = :black, label = L"d = 158")
+	SE = sqrt(σ^2/38 + σ^2/41)
+	bins_obs = @lift(1 + Int64(floor(log2(length($diferencia_mediasu_obs)))))
+	diff_estandarizada = @lift(zscore($diferencia_mediasu_obs, 158, SE))
 
-axislegend()
+	ax = Axis(fig[1,1],
+		xlabel = "Diferencia de medias",
+		ylabel = "Frecuencia",
+		title = "Distribución sin estandarizar (frecuencias)"; lock_axis...)
 
+	hist!(ax, diferencia_mediasu_obs, bins = bins_obs)
+	vlines!(ax, 158, color = :black, label = L"d = 158")
+	axislegend(ax)
 
-ax2 = Axis(fig[1,2], title = "Distribución estandarizada (densidad)")
+	ax2 = Axis(fig[1,2], title = "Distribución estandarizada (densidad)"; lock_axis...)
 
-xs = range(-4, 4, length = 100)
-yn = pdf.(Normal(), xs)
-SE = sqrt(σ^2/38 + σ^2/41)
-hist!(ax2, zscore(diferencia_mediasu, 158, SE),
-	  bins =  1 + Int64(floor(log2(n_muestrasu))),
-	 normalization = :pdf)
+	xs = range(-4, 4, length = 100)
+	yn = pdf.(Normal(), xs)
 
-lines!(ax2, xs, yn, label = "N(0, 1)", color = :black, xautolimits = false)
+	hist!(ax2, diff_estandarizada, bins = bins_obs, normalization = :pdf)
+	lines!(ax2, xs, yn, label = "N(0, 1)", color = :black, xautolimits = false)
+	axislegend(ax2)
 
-axislegend()
+	on(diferencia_mediasu_obs) do _
+		autolimits!(ax)
+		autolimits!(ax2)
+	end
 
-fig
+	fig
 end
 
 # ╔═╡ 74ac5fde-73f2-450a-a166-3f106575547f
 begin
 reset_nb
-	
+n_muestras_ic_obs = Observable(30)
+nivel_confianza_obs = Observable(95.0)
+
 md"""
 Retomemos la pregunta de la consultora privada, pero pensándola en términos de intervalos de confianza. Simulemos $(@bind n_muestras_ic Scrubbable(10:200, default=30)) diferencias de medias, y para cada una construyamos un intervalo de confianza del $(@bind nivel_confianza Scrubbable(0:0.1:99.9, default=95))%. Si el método es correcto, esperamos que ese intervalo contenga la verdadera diferencia (158) en aproximadamente ese porcentaje de las veces, ni más, ni menos.
 """
@@ -370,56 +420,71 @@ end
 
 # ╔═╡ ea496812-8e32-49f3-983e-160ce866c70e
 let
-Random.seed!(4)
-	
-diferencia_medias_ic = Vector{Float64}(undef, n_muestras_ic)
+    Random.seed!(4)
 
-SE = sqrt(10^2 / 38 + 10^2 / 41)
-z = cquantile(Normal(), (1 - nivel_confianza / 100)/2)
-err = z * SE
+    epsilon = 175 - 158
+    
+    vals_max = Vector{Float64}(undef, 200)
+    for i in 1:200
+        m1 = rand(Normal(x̄, σ), 38)
+        m2 = rand(Normal(ȳ, σ), 41)
+        vals_max[i] = mean(m1) - mean(m2)
+    end
 
-for i in 1:n_muestras_ic
-	m1 = rand(Normal(x̄, σ), 38)
-	m2 = rand(Normal(ȳ, σ), 41)
+    function calcular_datos(n, conf)
+        vals = vals_max[1:n]
+        SE = sqrt(10^2 / 38 + 10^2 / 41)
+        z = cquantile(Normal(), (1 - conf / 100) / 2)
+        err = z * SE
+        m = [abs(d - 158) <= err for d in vals]
+        (valores = vals, mask = m, idx = collect(eachindex(vals)), err = err)
+    end
 
-	diferencia_medias_ic[i] = mean(m1) - mean(m2)
-end
+    datos = Observable(calcular_datos(n_muestras_ic_obs[], nivel_confianza_obs[]))
 
-mask = [abs(d - 158) <= err for d in diferencia_medias_ic]
-	
-fig = Figure(size = (700, 400))
+    onany(n_muestras_ic_obs, nivel_confianza_obs) do n, conf
+        datos[] = calcular_datos(n, conf)
+        autolimits!(ax)
+#        ylims!(158 - epsilon, 158 + epsilon)
+    end
 
-ax = Axis(fig[1,1], 
-	xlabel = "Número de muestra",
-	ylabel = "Diferencia de medias (miles de USD)",
-	title = "Intervalos de confianza del $(round(nivel_confianza, digits=1))% para la diferencia de medias\n$(n_muestras_ic) muestras simuladas y $(round(Int, 100*mean(mask)))% contienen el valor verdadero")
+    idx_ok  = @lift $datos.idx[$datos.mask]
+    y_ok    = @lift $datos.valores[$datos.mask]
+    idx_bad = @lift $datos.idx[.!($datos.mask)]
+    y_bad   = @lift $datos.valores[.!($datos.mask)]
+    err_obs = @lift $datos.err
 
-hlines!(ax, 158,
-	label = "Diferencia verdadera = 158", 
-	linestyle = :dash, 
-	color = :black)
+    fig = Figure(size = (690, 400))
 
-errorbars!(ax,
-	eachindex(diferencia_medias_ic)[mask], diferencia_medias_ic[mask], err,
-	color = :green, 
-	label = "IC contiene la diferencia verdadera",
-	  whiskerwidth = 5)
+    ax = Axis(fig[1,1],
+        xlabel = "Número de muestra",
+        ylabel = "Diferencia de medias (miles de USD)",
+        title = @lift("Intervalos de confianza del $(round($nivel_confianza_obs, digits=1))% para la diferencia de medias\n$($n_muestras_ic_obs) muestras simuladas y $(round(Int, 100*mean($datos.mask)))% contienen el valor verdadero"); lock_axis...)
+    ylims!(158 - epsilon, 158 + epsilon)
 
-errorbars!(ax,
-	eachindex(diferencia_medias_ic)[.!(mask)], diferencia_medias_ic[.!(mask)], err,
-	color = :red, 
-	label = "IC no contiene la diferencia verdadera",
-	  whiskerwidth = 5)
-	
-scatter!(ax, 
-	eachindex(diferencia_medias_ic), diferencia_medias_ic, 
-	color = ifelse.(mask, :green, :red),
-	marker = ifelse.(mask, :circle, :xcross),
-	markersize = -0.03 * n_muestras_ic + 10.88) #radio ajustado para evitar superposicion -> lineal por (30, 10) y (200, 5).
+    hlines!(ax, 158,
+        label = "Diferencia verdadera = 158",
+        linestyle = :dash,
+        color = :black)
 
-axislegend(position= :rb)
+    errorbars!(ax, idx_ok, y_ok, err_obs,
+        color = :green,
+        label = "IC contiene la diferencia verdadera",
+        whiskerwidth = 5)
 
-fig
+    errorbars!(ax, idx_bad, y_bad, err_obs,
+        color = :red,
+        label = "IC no contiene la diferencia verdadera",
+        whiskerwidth = 5)
+
+    scatter!(ax, @lift($datos.idx), @lift($datos.valores),
+        color = @lift(ifelse.($datos.mask, :green, :red)),
+        marker = @lift(ifelse.($datos.mask, :circle, :xcross)),
+        markersize = @lift(-0.03 * $n_muestras_ic_obs + 10.88)) #radio ajustado para evitar superposicion -> lineal por (30, 10) y (200, 5).
+
+    axislegend(ax, position = :rb)
+
+    fig
 end
 
 # ╔═╡ 6ee1d0e5-796f-49a2-83da-881138e35579
@@ -429,23 +494,31 @@ El % de intervalos que efectivamente contienen a la diferencia verdadera (158) d
 Experimentá moviendo los deslizadores de arriba: probá con pocas muestras y muchas, con niveles de confianza altos (99%) y más bajos (80%), y observá cómo cambian tanto el ancho de los intervalos como el % de cobertura obtenido.
 """
 
+# ╔═╡ 338509ba-9113-432e-b2da-599cfd958a51
+begin
+    n_muestras_ic_obs[] = n_muestras_ic
+    nivel_confianza_obs[] = nivel_confianza
+end;
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+Observables = "510215fc-4207-5dde-b226-833fc4488ee2"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+WGLMakie = "276b4fcb-3e11-5398-bf8b-a0c2d153d008"
 
 [compat]
-CairoMakie = "~0.15.13"
 Distributions = "~0.25.129"
 LaTeXStrings = "~1.4.0"
+Observables = "~0.5.5"
 PlutoUI = "~0.7.83"
 StatsBase = "~0.34.12"
+WGLMakie = "~0.13.13"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -454,7 +527,12 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "0f428757db1852b8d9a0df30fdfb2911ee4bfed1"
+project_hash = "d2f69f675e76ad3a46bd997140205b36a58e9dfd"
+
+[[deps.ANSIColoredPrinters]]
+git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
+uuid = "a4c015fc-c6ff-483c-b24f-f7ea428134e9"
+version = "0.0.1"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -564,6 +642,19 @@ git-tree-sha1 = "8c290a1b223deaeea9aea44b235d24546da8eb98"
 uuid = "18cc8868-cbac-4acf-b575-c8ff214dc66f"
 version = "1.4.0"
 
+[[deps.Bonito]]
+deps = ["ANSIColoredPrinters", "Base64", "CodecZlib", "Colors", "CommonMark", "Dates", "Deno_jll", "HTTP", "Hyperscript", "JSON", "LinearAlgebra", "Markdown", "MbedTLS", "MsgPack", "Observables", "OrderedCollections", "PrecompileTools", "Random", "RelocatableFolders", "SHA", "Scratch", "Sockets", "Tables", "ThreadPools", "URIs", "UUIDs", "WidgetsBase"]
+git-tree-sha1 = "31a4aafb6cd3918d71b638af1218108388edce40"
+uuid = "824d6782-a2ef-11e9-3a09-e5662e0c26f8"
+version = "5.1.1"
+
+    [deps.Bonito.extensions]
+    BonitoDocumenterExt = ["Documenter", "MarkdownAST"]
+
+    [deps.Bonito.weakdeps]
+    Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+    MarkdownAST = "d0879d2d-cac2-40c8-9cee-1863dc0c7391"
+
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "1b96ea4a01afe0ea4090c5c8039690672dd13f2e"
@@ -591,18 +682,6 @@ git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
 uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
 version = "1.0.1+0"
 
-[[deps.Cairo]]
-deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
-git-tree-sha1 = "71aa551c5c33f1a4415867fe06b7844faadb0ae9"
-uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
-version = "1.1.1"
-
-[[deps.CairoMakie]]
-deps = ["CRC32c", "Cairo", "Cairo_jll", "Colors", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "PrecompileTools"]
-git-tree-sha1 = "47142129b1777e21da58cff265050b10d8560588"
-uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-version = "0.15.13"
-
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
 git-tree-sha1 = "1fa950ebc3e37eccd51c6a8fe1f92f7d86263522"
@@ -618,6 +697,12 @@ weakdeps = ["SparseArrays"]
 
     [deps.ChainRulesCore.extensions]
     ChainRulesCoreSparseArraysExt = "SparseArrays"
+
+[[deps.CodecZlib]]
+deps = ["TranscodingStreams", "Zlib_jll"]
+git-tree-sha1 = "962834c22b66e32aa10f7611c08c8ca4e20749a9"
+uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
+version = "0.7.8"
 
 [[deps.CodecZstd]]
 deps = ["TranscodingStreams", "Zstd_jll"]
@@ -662,6 +747,20 @@ deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
 git-tree-sha1 = "37ea44092930b1811e666c3bc38065d7d87fcc74"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.1"
+
+[[deps.CommonMark]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "7e0e715804be2cfdc251d9a4bd10ace7a1b791e5"
+uuid = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
+version = "1.0.3"
+
+    [deps.CommonMark.extensions]
+    CommonMarkMarkdownASTExt = "MarkdownAST"
+    CommonMarkMarkdownExt = "Markdown"
+
+    [deps.CommonMark.weakdeps]
+    Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
+    MarkdownAST = "d0879d2d-cac2-40c8-9cee-1863dc0c7391"
 
 [[deps.CommonSolve]]
 git-tree-sha1 = "eeaad7cef88554c2fa56b5a3f71cfd5cb708c662"
@@ -753,6 +852,12 @@ git-tree-sha1 = "c55f5a9fd67bdbc8e089b5a3111fe4292986a8e8"
 uuid = "927a84f5-c5f4-47a5-9785-b46e178433df"
 version = "1.6.6"
 
+[[deps.Deno_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "cd6756e833c377e0ce9cd63fb97689a255f12323"
+uuid = "04572ae6-984a-583e-9378-9577a1c2574d"
+version = "1.33.4+0"
+
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -826,12 +931,10 @@ deps = ["Pkg", "Requires", "UUIDs"]
 git-tree-sha1 = "6621fef488e496356c9c9625d0562c12a6070819"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 version = "1.20.0"
+weakdeps = ["HTTP"]
 
     [deps.FileIO.extensions]
     HTTPExt = "HTTP"
-
-    [deps.FileIO.weakdeps]
-    HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 
 [[deps.FilePaths]]
 deps = ["FilePathsBase", "MacroTools", "Reexport"]
@@ -957,12 +1060,6 @@ git-tree-sha1 = "24f6def62397474a297bfcec22384101609142ed"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.86.3+0"
 
-[[deps.Graphics]]
-deps = ["Colors", "LinearAlgebra", "NaNMath"]
-git-tree-sha1 = "a641238db938fff9b2f60d08ed9030387daf428c"
-uuid = "a2bd30eb-e257-5431-a919-1863eab51364"
-version = "1.1.3"
-
 [[deps.Graphite2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "69ffb934a5c5b7e086a0b4fee3427db2556fba6e"
@@ -974,6 +1071,12 @@ deps = ["GeometryBasics", "InteractiveUtils", "Observables"]
 git-tree-sha1 = "93d5c27c8de51687a2c70ec0716e6e76f298416f"
 uuid = "3955a311-db13-416c-9275-1d80ed98e5e9"
 version = "0.11.2"
+
+[[deps.HTTP]]
+deps = ["Base64", "CodecZlib", "Dates", "EnumX", "PrecompileTools", "Random", "Reseau", "SHA", "URIs", "UUIDs", "Zlib_jll"]
+git-tree-sha1 = "c2c808326222b6dc4bec295a83b55f79aeec98e0"
+uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+version = "2.5.5"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll"]
@@ -1052,9 +1155,9 @@ uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.5"
 
 [[deps.IntegerMathUtils]]
-git-tree-sha1 = "4c1acff2dc6b6967e7e750633c50bc3b8d83e617"
+git-tree-sha1 = "c72458f1962faeb003bf23cbdb75164fe6280906"
 uuid = "18e54dd8-cb9d-406c-a71d-865a43cbb235"
-version = "0.1.3"
+version = "0.1.4"
 
 [[deps.InteractiveUtils]]
 deps = ["Markdown"]
@@ -1105,16 +1208,12 @@ version = "1.0.10"
 git-tree-sha1 = "79d6bd28c8d9bccc2229784f1bd637689b256377"
 uuid = "8197267c-284f-5f27-9208-e0e47529a953"
 version = "0.7.14"
+weakdeps = ["Random", "RecipesBase", "Statistics"]
 
     [deps.IntervalSets.extensions]
     IntervalSetsRandomExt = "Random"
     IntervalSetsRecipesBaseExt = "RecipesBase"
     IntervalSetsStatisticsExt = "Statistics"
-
-    [deps.IntervalSets.weakdeps]
-    Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
-    Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [[deps.InverseFunctions]]
 git-tree-sha1 = "a779299d77cd080bf77b97535acecd73e1c5e5cb"
@@ -1344,6 +1443,18 @@ git-tree-sha1 = "aa1078778be5a8e5259ff04fbc3d258b3e78d464"
 uuid = "0a4f8689-d25c-4efe-a92b-7142dfc1aa53"
 version = "0.6.9"
 
+[[deps.MbedTLS]]
+deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "NetworkOptions", "Random", "Sockets"]
+git-tree-sha1 = "8785729fa736197687541f7053f6d8ab7fc44f92"
+uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
+version = "1.1.10"
+
+[[deps.MbedTLS_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "ff69a2b1330bcb730b9ac1ab7dd680176f5896b8"
+uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
+version = "2.28.1010+0"
+
 [[deps.Missings]]
 deps = ["DataAPI"]
 git-tree-sha1 = "ec4f7fbeab05d7747bdf98eb74d130a2a2ed298d"
@@ -1364,17 +1475,17 @@ version = "0.3.4"
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 version = "2025.11.4"
 
+[[deps.MsgPack]]
+deps = ["Serialization"]
+git-tree-sha1 = "f5db02ae992c260e4826fe78c942954b48e1d9c2"
+uuid = "99f44e22-a591-53d1-9472-aa23ef4bd671"
+version = "1.2.1"
+
 [[deps.MuladdMacro]]
 deps = ["PrecompileTools"]
 git-tree-sha1 = "e8dcbeef032ba2f9051a44ac22b4e54e3a1a0099"
 uuid = "46d2c3a1-f734-5fdb-9937-b9b9aeba4221"
 version = "0.2.6"
-
-[[deps.NaNMath]]
-deps = ["OpenLibm_jll"]
-git-tree-sha1 = "dbd2e8cd2c1c27f0b584f6661b4309609c5a685e"
-uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
-version = "1.1.4"
 
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore", "ImageMetadata"]
@@ -1408,9 +1519,9 @@ version = "1.3.6+0"
 
 [[deps.OpenBLASConsistentFPCSR_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "dafdaa3ff15f20ff703d909d3a6f574a5b0586f3"
+git-tree-sha1 = "38a93f17e431141c6470bb67a88952a7c4f0e928"
 uuid = "6cdc7f73-28fd-5e50-80fb-958a8875b1af"
-version = "0.3.33+1"
+version = "0.3.34+0"
 
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
@@ -1452,9 +1563,9 @@ uuid = "91d4177d-7536-5919-b921-800302f37372"
 version = "1.6.1+0"
 
 [[deps.OrderedCollections]]
-git-tree-sha1 = "94ba93778373a53bfd5a0caaf7d809c445292ff4"
+git-tree-sha1 = "05f45c2e0de6259db764adbfd2f1dc6d3f8de13c"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
-version = "1.8.2"
+version = "2.0.1"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1488,12 +1599,6 @@ deps = ["OffsetArrays"]
 git-tree-sha1 = "0fac6313486baae819364c52b4f483450a9d793f"
 uuid = "5432bcbf-9aad-5242-b902-cca2824c8663"
 version = "0.5.12"
-
-[[deps.Pango_jll]]
-deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "58e5ed5e386e156bd93e86b305ebd21ac63d2d04"
-uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
-version = "1.57.1+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
@@ -1616,6 +1721,12 @@ weakdeps = ["FixedPointNumbers"]
     [deps.Ratios.extensions]
     RatiosFixedPointNumbersExt = "FixedPointNumbers"
 
+[[deps.RecipesBase]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "5c3d09cc4f31f5fc6af001c250bf1278733100ff"
+uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+version = "1.3.4"
+
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
@@ -1632,6 +1743,12 @@ deps = ["UUIDs"]
 git-tree-sha1 = "62389eeff14780bfe55195b7204c0d8738436d64"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.1"
+
+[[deps.Reseau]]
+deps = ["NetworkOptions", "OpenSSL_jll", "PrecompileTools", "Random", "SHA"]
+git-tree-sha1 = "8648ea1f1e700e9abd617d7eb6843a73097f2aeb"
+uuid = "802f3686-a58f-41ce-bb0c-3c43c75bba36"
+version = "1.3.3"
 
 [[deps.Rmath]]
 deps = ["Random", "Rmath_jll"]
@@ -1890,6 +2007,12 @@ deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 version = "1.11.0"
 
+[[deps.ThreadPools]]
+deps = ["Printf", "RecipesBase", "Statistics"]
+git-tree-sha1 = "50cb5f85d5646bc1422aa0238aa5bfca99ca9ae7"
+uuid = "b189fb0b-2eb5-4ed4-bc0c-d34c51242431"
+version = "2.1.1"
+
 [[deps.TiffImages]]
 deps = ["CodecZstd", "ColorTypes", "DataStructures", "DocStringExtensions", "FileIO", "FixedPointNumbers", "IndirectArrays", "Inflate", "Mmap", "OffsetArrays", "PkgVersion", "PrecompileTools", "ProgressMeter", "SIMD", "UUIDs"]
 git-tree-sha1 = "9ca5f1f2d42f80df4b8c9f6ab5a64f438bbd9976"
@@ -1954,11 +2077,23 @@ version = "1.28.0"
     NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
     Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
+[[deps.WGLMakie]]
+deps = ["Bonito", "Colors", "FileIO", "FreeTypeAbstraction", "GeometryBasics", "Hyperscript", "LinearAlgebra", "Makie", "Observables", "PNGFiles", "PrecompileTools", "RelocatableFolders", "ShaderAbstractions", "StaticArrays"]
+git-tree-sha1 = "4208f656e5464ed8e4ea478b758a9087e9ec73be"
+uuid = "276b4fcb-3e11-5398-bf8b-a0c2d153d008"
+version = "0.13.13"
+
 [[deps.WebP]]
 deps = ["CEnum", "ColorTypes", "FileIO", "FixedPointNumbers", "ImageCore", "libwebp_jll"]
 git-tree-sha1 = "aa1ca3c47f119fbdae8770c29820e5e6119b83f2"
 uuid = "e3aaa7dc-3e4b-44e0-be63-ffb868ccd7c1"
 version = "0.1.3"
+
+[[deps.WidgetsBase]]
+deps = ["Observables"]
+git-tree-sha1 = "30a1d631eb06e8c868c559599f915a62d55c2601"
+uuid = "eead4739-05f7-45a1-878c-cee36b57321c"
+version = "0.1.4"
 
 [[deps.WoodburyMatrices]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -2062,9 +2197,9 @@ version = "5.15.0+0"
 
 [[deps.libdrm_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libpciaccess_jll"]
-git-tree-sha1 = "63aac0bcb0b582e11bad965cef4a689905456c03"
+git-tree-sha1 = "28e57478e8a160d346a19c28b3fffb9273bcc9c2"
 uuid = "8e53e030-5e6c-5a89-a30b-be5b7263a166"
-version = "2.4.125+1"
+version = "2.4.134+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2130,6 +2265,7 @@ version = "4.1.0+0"
 # ╟─bf9277a1-6dcb-4200-8243-7b38d300460e
 # ╟─3f9eaa91-1440-43a3-938b-98e8df9daf57
 # ╟─8f0ee3f7-9836-45c6-b389-77d9d6308f36
+# ╟─947051d3-b9c7-402d-9664-00c8a01d8eba
 # ╟─9c89bb71-ade4-4114-9cbb-34d3f6b12395
 # ╟─4ed9c622-5b22-4863-8b45-ea140cda31bc
 # ╟─f07ba571-0781-4a24-aa72-f0f7697d2b79
@@ -2139,6 +2275,7 @@ version = "4.1.0+0"
 # ╟─acf731af-3eef-4b4c-a7c4-0775d2a0bd7a
 # ╟─dc520bc0-ad20-474b-9d49-c41d974162a2
 # ╟─0edecc4e-910c-4399-affd-ec192161a492
+# ╟─da94363e-8a97-48cb-bc4e-111b3f94ca9a
 # ╟─1517c365-6e5e-4c95-9645-d1736517d871
 # ╟─0c3c2aeb-cc6e-4efc-a95a-dc28b72f6e47
 # ╟─2dbe06ef-3a45-46fd-be7a-b3e81523cd0e
@@ -2153,6 +2290,7 @@ version = "4.1.0+0"
 # ╟─74ac5fde-73f2-450a-a166-3f106575547f
 # ╟─ea496812-8e32-49f3-983e-160ce866c70e
 # ╟─6ee1d0e5-796f-49a2-83da-881138e35579
+# ╟─338509ba-9113-432e-b2da-599cfd958a51
 # ╟─8b1065d0-8533-11f1-b6d2-8d30213e0a80
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
